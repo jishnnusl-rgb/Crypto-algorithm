@@ -1,0 +1,345 @@
+<div class="section-header">
+    <h1>🔐 CMAC (Message-Only Mode)</h1>
+    <p>Message → MD5 → 64-bit Key → DES Encrypt → n-bit CMAC</p>
+</div>
+
+<a href="/ex4" class="back-btn">← Back to Ex4</a>
+
+<!-- Flow Diagram -->
+<div class="info-box" style="max-width: 1000px;">
+    <h3>🔄 CMAC Flow (Message-Only)</h3>
+    <div class="formula-grid">
+        <div class="formula-item">
+            <h5>Step 1</h5>
+            <code>Input Message</code>
+            <p>Raw message</p>
+        </div>
+        <div class="formula-item">
+            <h5>Step 2</h5>
+            <code>MD5 Hash</code>
+            <p>128-bit hash</p>
+        </div>
+        <div class="formula-item">
+            <h5>Step 3</h5>
+            <code>Extract 64-bit</code>
+            <p>DES Key</p>
+        </div>
+        <div class="formula-item">
+            <h5>Step 4</h5>
+            <code>Pad Message</code>
+            <p>Block alignment</p>
+        </div>
+        <div class="formula-item">
+            <h5>Step 5</h5>
+            <code>Generate K1/K2</code>
+            <p>Subkeys</p>
+        </div>
+        <div class="formula-item">
+            <h5>Step 6</h5>
+            <code>DES Encrypt</code>
+            <p>Process blocks</p>
+        </div>
+        <div class="formula-item">
+            <h5>Step 7</h5>
+            <code>Output</code>
+            <p>n-bit CMAC</p>
+        </div>
+    </div>
+</div>
+
+<!-- Input Form -->
+<div class="cipher-container">
+    <div class="card">
+        <h2>Generate / Verify CMAC</h2>
+        <form method="post">
+            <label style="color:#64748b; font-size:0.9rem;">Message:</label>
+            <input name="message" placeholder="Message to authenticate" required>
+            
+            <label style="color:#64748b; font-size:0.9rem; margin-top:10px;">Output CMAC length (bits):</label>
+            <input type="number" name="output_bits" value="64" min="1" max="64" placeholder="1-64 bits">
+            
+            <label style="color:#64748b; font-size:0.9rem; margin-top:10px;">Mode:</label>
+            <select name="mode">
+                <option value="generate">Generate MAC</option>
+                <option value="verify">Verify MAC</option>
+            </select>
+            
+            <input name="mac" placeholder="MAC to verify (hex)" id="mac-input" style="display:none;">
+            
+            <button type="submit">Run</button>
+        </form>
+    </div>
+</div>
+
+<!-- Error Display -->
+{% if error %}
+<div class="error-box">
+    <h3>⚠️ Error</h3>
+    <p>{{ error }}</p>
+</div>
+{% endif %}
+
+<!-- Result Display -->
+{% if result %}
+<div class="result-box">
+    <h3>🔑 CMAC: {{ result }}</h3>
+    {% if md5_hash %}
+    <p><strong>MD5 Hash (128-bit):</strong> <code>{{ md5_hash }}</code></p>
+    {% endif %}
+    {% if des_key %}
+    <p><strong>DES Key (64-bit):</strong> <code>{{ des_key }}</code></p>
+    {% endif %}
+    {% if verification_result is not none %}
+    <p style="color: {{ '#16a34a' if verification_result else '#dc2626' }}; font-weight:bold; margin-top:15px; font-size:1.3rem;">
+        {{ '✓ MAC VALID' if verification_result else '✗ MAC INVALID' }}
+    </p>
+    {% endif %}
+</div>
+
+<!-- Detailed Steps -->
+{% if steps %}
+{% for step_group in steps %}
+
+    {% if step_group.phase == 'Step 1-2: MD5 Hash & Key Derivation' %}
+    <div class="block-section">
+        <h4>📝 Step 1-2: MD5 Hash & 64-bit Key Extraction</h4>
+        {% for key_step in step_group.key_derivation_steps %}
+            {% if key_step.phase == 'MD5 Hash Generation' %}
+            <p><strong>Input Message:</strong> "{{ key_step.input_message }}"</p>
+            <p><strong>MD5 Hash ({{ key_step.md5_bits }}-bit):</strong> <code>{{ key_step.md5_full }}</code></p>
+            
+            {% elif key_step.phase == '64-bit Extraction' %}
+            <p><strong>Extraction Method:</strong> {{ key_step.method }}</p>
+            <p><strong>Extracted 64-bit Key:</strong> <code>{{ key_step.extracted_hex }}</code></p>
+            <p><strong>Bits:</strong> {{ key_step.extracted_bits }} | <strong>Bytes:</strong> {{ key_step.extracted_bytes }}</p>
+            {% endif %}
+        {% endfor %}
+        
+        <details style="margin-top:15px;">
+            <summary style="color:#0284c7; cursor:pointer;">📊 View Full MD5 Calculation</summary>
+            <div style="margin-top:10px;">
+                {% for md5_step in step_group.md5_details %}
+                    {% if md5_step.phase == 'Padding' %}
+                    <div class="info-box">
+                        <h4>MD5 Padding</h4>
+                        <p><strong>Original Length:</strong> {{ md5_step.original_length }} bytes</p>
+                        <p><strong>Padded Length:</strong> {{ md5_step.padded_length }} bytes</p>
+                        <p><code style="word-break:break-all;">{{ md5_step.padded_hex }}</code></p>
+                    </div>
+                    {% elif md5_step.phase == 'Final Hash' %}
+                    <div class="info-box">
+                        <h4>✅ MD5 Final Hash</h4>
+                        <p><code>{{ md5_step.hash }}</code></p>
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </details>
+    </div>
+    
+    {% elif step_group.phase == 'Step 3: CMAC Subkey Generation' %}
+    <div class="block-section">
+        <h4>🔧 Step 3: Generate CMAC Subkeys (K1 & K2)</h4>
+        <p><strong>K1:</strong> <code>{{ step_group.K1 }}</code></p>
+        <p><strong>K2:</strong> <code>{{ step_group.K2 }}</code></p>
+        
+        <table class="crypto-table" style="margin-top:15px;">
+            <tr>
+                <th>Step</th>
+                <th>Operation</th>
+                <th>Output</th>
+                <th>Details</th>
+            </tr>
+            {% for s in step_group.steps %}
+            <tr>
+                <td>{{ s.step }}</td>
+                <td>{{ s.operation }}</td>
+                <td><code>{{ s.output if s.output is defined else s.value if s.value is defined else '-' }}</code></td>
+                <td>{{ s.details }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+    
+    {% elif step_group.phase == 'Step 4: Message Padding' %}
+    <div class="block-section">
+        <h4>📦 Step 4: Message Padding</h4>
+        <p><strong>Block Size:</strong> {{ step_group.block_size }} bytes ({{ step_group.block_size_bits }} bits)</p>
+        {% for pad_info in step_group.padding_info %}
+        <div style="background: rgba(14, 165, 233, 0.06); padding: 15px; border-radius: 8px; margin: 10px 0;">
+            <p><strong>Padding Needed:</strong> <span style="color:{{ '#dc2626' if pad_info.padding_needed else '#16a34a' }};">{{ 'Yes' if pad_info.padding_needed else 'No' }}</span></p>
+            <p><strong>Original Length:</strong> {{ pad_info.original_length }} bytes</p>
+            <p><strong>Original (Hex):</strong> <code>{{ pad_info.original_hex }}</code></p>
+            {% if pad_info.padding_needed %}
+            <p><strong>Padding:</strong> {{ pad_info.padding_length }} bytes - <code>{{ pad_info.padding_hex }}</code></p>
+            <p><strong>Pattern:</strong> {{ pad_info.padding_pattern }}</p>
+            {% endif %}
+            <p><strong>Final Message:</strong> <code>{{ pad_info.padded_message_hex }}</code></p>
+            <p><strong>Final Length:</strong> {{ pad_info.padded_length }} bytes</p>
+            <p><strong>Subkey Used:</strong> <span style="color:#0284c7; font-weight:bold;">{{ pad_info.subkey_used }}</span></p>
+            <p><strong>Reason:</strong> {{ pad_info.reason }}</p>
+        </div>
+        {% endfor %}
+    </div>
+    
+    {% elif step_group.phase == 'Step 5: Block Splitting' %}
+    <div class="block-section">
+        <h4>✂️ Step 5: Split into {{ step_group.num_blocks }} Block(s)</h4>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-top: 15px;">
+            {% for block in step_group.blocks %}
+            <div style="background: rgba(14, 165, 233, 0.08); padding: 12px; border-radius: 8px; text-align: center;">
+                <p style="color:#0284c7; font-weight:bold;">Block {{ block.block_num }}</p>
+                <code style="font-size:0.85rem; word-break:break-all;">{{ block.hex }}</code>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    {% elif step_group.phase == 'Step 6: DES Encryption (Block Processing)' %}
+    <div class="block-section">
+        <h4>⚙️ Step 6: DES Encryption with Key</h4>
+        <p><strong>DES Key:</strong> <code>{{ step_group.key_used_hex }}</code></p>
+        <p><strong>Cipher:</strong> {{ step_group.cipher }}</p>
+        
+        {% for block in step_group.steps %}
+        <details style="margin: 15px 0;">
+            <summary style="color:#0284c7; font-weight:bold; cursor:pointer; padding: 12px; background: rgba(14, 165, 233, 0.06); border-radius: 8px;">
+                🔹 Block {{ block.block_num }} {% if block.is_last %}<span style="color:#16a34a; font-weight:bold;">(LAST BLOCK)</span>{% endif %}
+            </summary>
+            <div style="margin-top: 15px; padding: 15px; background: rgba(255,255,255,0.5); border-radius: 8px;">
+                <table class="crypto-table">
+                    <tr>
+                        <th>Operation</th>
+                        <th>Value (Hex)</th>
+                    </tr>
+                    <tr>
+                        <td>📥 Block Input</td>
+                        <td><code>{{ block.block_hex }}</code></td>
+                    </tr>
+                    <tr>
+                        <td>🔄 Previous MAC</td>
+                        <td><code>{{ block.previous_mac_hex }}</code></td>
+                    </tr>
+                    <tr>
+                        <td>➕ Block ⊕ MAC</td>
+                        <td><code>{{ block.after_xor_hex }}</code></td>
+                    </tr>
+                    {% if block.is_last %}
+                    <tr style="background: rgba(34, 197, 94, 0.12);">
+                        <td><strong>🔑 Subkey ({{ block.subkey_name }})</strong></td>
+                        <td><code>{{ block.subkey_hex }}</code></td>
+                    </tr>
+                    <tr style="background: rgba(34, 197, 94, 0.12);">
+                        <td><strong>➕ After ⊕ Subkey</strong></td>
+                        <td><code>{{ block.after_subkey_xor_hex }}</code></td>
+                    </tr>
+                    {% endif %}
+                    <tr style="background: rgba(56, 189, 248, 0.08);">
+                        <td>🔐 DES Input</td>
+                        <td><code>{{ block.des_input_hex }}</code></td>
+                    </tr>
+                    <tr style="background: rgba(56, 189, 248, 0.15);">
+                        <td><strong>🔓 DES Output (MAC)</strong></td>
+                        <td><code>{{ block.des_output_hex }}</code></td>
+                    </tr>
+                </table>
+            </div>
+        </details>
+        {% endfor %}
+    </div>
+    
+    {% elif step_group.phase == 'Step 7: Final CMAC Output' %}
+    <div class="block-section">
+        <h4>✅ Step 7: Final CMAC Value</h4>
+        <table class="crypto-table">
+            <tr>
+                <th>Property</th>
+                <th>Value</th>
+            </tr>
+            <tr>
+                <td>Full MAC (64-bit)</td>
+                <td><code>{{ step_group.full_mac_hex }}</code></td>
+            </tr>
+            <tr>
+                <td>Requested Output</td>
+                <td>{{ step_group.requested_bits }} bits</td>
+            </tr>
+            <tr>
+                <td>Truncated?</td>
+                <td style="color:{{ '#dc2626' if step_group.truncated else '#16a34a' }};">{{ 'Yes' if step_group.truncated else 'No' }}</td>
+            </tr>
+            <tr class="highlight-row" style="background: rgba(34, 197, 94, 0.12);">
+                <td><strong>Final CMAC</strong></td>
+                <td><code style="font-size:1.1rem; font-weight:bold; color:#16a34a;">{{ step_group.final_mac_hex }}</code></td>
+            </tr>
+            <tr>
+                <td>Final MAC Bits</td>
+                <td>{{ step_group.final_mac_bits }} bits</td>
+            </tr>
+        </table>
+    </div>
+    
+    {% elif step_group.phase == 'Verification' %}
+    <div class="block-section">
+        <h4>🔍 CMAC Verification</h4>
+        <table class="crypto-table">
+            <tr>
+                <th>Type</th>
+                <th>MAC Value</th>
+            </tr>
+            <tr>
+                <td>Computed MAC</td>
+                <td><code>{{ step_group.computed_mac_hex }}</code></td>
+            </tr>
+            <tr>
+                <td>Received MAC</td>
+                <td><code>{{ step_group.received_mac_hex }}</code></td>
+            </tr>
+            <tr style="background: {{ 'rgba(34, 197, 94, 0.15)' if step_group.match else 'rgba(239, 68, 68, 0.15)' }};">
+                <td><strong>Result</strong></td>
+                <td style="color: {{ '#16a34a' if step_group.match else '#dc2626' }}; font-weight:bold; font-size:1.2rem;">
+                    {{ step_group.result }}
+                </td>
+            </tr>
+        </table>
+    </div>
+    {% endif %}
+    
+{% endfor %}
+{% endif %}
+
+<!-- Information Box -->
+<div class="info-box">
+    <h3>ℹ️ About CMAC (Message-Only Mode)</h3>
+    <p><strong>Complete Flow:</strong></p>
+    <p>1️⃣ <strong>Input:</strong> Message only (no separate key input)</p>
+    <p>2️⃣ <strong>MD5 Hash:</strong> Message → 128-bit MD5 hash</p>
+    <p>3️⃣ <strong>Key Extraction:</strong> First 64 bits of MD5 → DES key</p>
+    <p>4️⃣ <strong>Subkey Generation:</strong> DES(0⁶⁴) → K1 & K2</p>
+    <p>5️⃣ <strong>Message Padding:</strong> Add 0x80 + 0x00 if needed</p>
+    <p>6️⃣ <strong>Block Processing:</strong> XOR blocks, apply subkey to last, DES encrypt</p>
+    <p>7️⃣ <strong>Output:</strong> n-bit CMAC (truncate if needed)</p>
+    
+    <p style="margin-top:15px;"><strong>Subkey Selection:</strong></p>
+    <p>• <code>K1</code>: Complete block (no padding)</p>
+    <p>• <code>K2</code>: Incomplete block (padding needed)</p>
+    
+    <p style="margin-top:15px;"><strong>Security:</strong> Provides message authentication & integrity</p>
+</div>
+
+{% endif %}
+
+<!-- JavaScript for Show/Hide MAC Input -->
+<script>
+document.querySelector('select[name="mode"]').addEventListener('change', function() {
+    const macInput = document.getElementById('mac-input');
+    if (this.value === 'verify') {
+        macInput.required = true;
+        macInput.style.display = 'block';
+    } else {
+        macInput.required = false;
+        macInput.style.display = 'none';
+        macInput.value = '';
+    }
+});
+</script>

@@ -1,0 +1,70 @@
+<div class="section-header">
+    <h1>🔲 Playfair Cipher</h1>
+    <p>Digraph Substitution Cipher</p>
+</div>
+
+<a href="/ex1" class="back-btn">← Back to Ex1</a>
+
+<div class="cipher-container">
+    <div class="card">
+        <h2>Encrypt / Decrypt</h2>
+        <form method="post">
+            <input name="text" placeholder="Text" required>
+            <input name="key" placeholder="Key" required>
+            <select name="mode">
+                <option value="enc">Encrypt</option>
+                <option value="dec">Decrypt</option>
+            </select>
+            <button type="submit">Run</button>
+        </form>
+    </div>
+</div>
+
+{% if error %}
+<div class="error-box">
+    <h3>⚠️ Error</h3>
+    <p>{{ error }}</p>
+</div>
+{% endif %}
+
+{% if result %}
+<div class="result-box">
+    <h3>{{ "🔒 Encrypted" if mode == "enc" else "🔓 Decrypted" }}: {{ result }}</h3>
+</div>
+
+<h3 style="text-align:center; margin-top:30px; color:#38bdf8;">🔑 Key Matrix (5×5)</h3>
+<div class="matrix">
+    {% for row in matrix %}
+    <div class="matrix-row">
+        {% for c in row %}
+        <span>{{ c }}</span>
+        {% endfor %}
+    </div>
+    {% endfor %}
+</div>
+
+<h3 style="text-align:center; margin-top:30px; color:#38bdf8;">📊 Step-by-Step</h3>
+<table class="crypto-table">
+    <tr>
+        <th>Pair</th>
+        <th>Positions</th>
+        <th>Rule</th>
+        <th>Output</th>
+    </tr>
+    {% for s in steps %}
+    <tr>
+        <td>{{ s.pair }}</td>
+        <td>{{ s.pos }}</td>
+        <td>{{ s.rule }}</td>
+        <td>{{ s.out }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+<div class="info-box">
+    <p><strong>Rules:</strong></p>
+    <p>• <code>Same Row</code>: Shift right (encrypt) / left (decrypt)</p>
+    <p>• <code>Same Column</code>: Shift down (encrypt) / up (decrypt)</p>
+    <p>• <code>Rectangle</code>: Swap columns</p>
+</div>
+{% endif %}

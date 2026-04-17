@@ -1,0 +1,145 @@
+<div class="section-header">
+    <h1> Euclidean Algorithm</h1>
+    <p>GCD, Extended Euclidean & Modular Inverse</p>
+</div>
+
+<a href="/ex1" class="back-btn">← Back to Ex1</a>
+
+<div class="info-box">
+    <h4>Applications in Cryptography:</h4>
+    <p>• Finding GCD for key validation • Computing modular inverse • RSA key generation</p>
+</div>
+
+<div class="cipher-container">
+    <!-- GCD Calculator -->
+    <div class="card">
+        <h2>GCD Calculator</h2>
+        <form method="post">
+            <input type="hidden" name="calc_type" value="gcd">
+            <input name="a" type="number" placeholder="Enter number a" required>
+            <input name="b" type="number" placeholder="Enter number b" required>
+            <button type="submit">Calculate GCD</button>
+        </form>
+    </div>
+    
+    <!-- Extended Euclidean -->
+    <div class="card">
+        <h2>Extended Euclidean</h2>
+        <form method="post">
+            <input type="hidden" name="calc_type" value="extended">
+            <input name="a" type="number" placeholder="Enter number a" required>
+            <input name="b" type="number" placeholder="Enter number b" required>
+            <button type="submit">Find x, y</button>
+        </form>
+        <p style="font-size: 0.85rem; color: #94a3b8; margin-top: 10px;">ax + by = gcd(a,b)</p>
+    </div>
+    
+    <!-- Modular Inverse -->
+    <div class="card">
+        <h2>Modular Inverse</h2>
+        <form method="post">
+            <input type="hidden" name="calc_type" value="modinv">
+            <input name="a" type="number" placeholder="Enter number a" required>
+            <input name="m" type="number" placeholder="Enter modulus m" required>
+            <button type="submit">Find a⁻¹ mod m</button>
+        </form>
+        <p style="font-size: 0.85rem; color: #94a3b8; margin-top: 10px;">ax ≡ 1 (mod m)</p>
+    </div>
+</div>
+
+{% if error %}
+<div class="error-box">
+    <h3> Error</h3>
+    <p>{{ error }}</p>
+</div>
+{% endif %}
+
+{% if result is not none %}
+<div class="result-box">
+    {% if calc_type == 'gcd' %}
+    <h3>GCD({{ a_val }}, {{ b_val }}) = <span style="color: #7dd3fc;">{{ result }}</span></h3>
+    {% elif calc_type == 'extended' %}
+    <h3>Extended Euclidean Result:</h3>
+    <p style="font-size: 1.1rem; margin-top: 10px;">GCD = <strong style="color: #7dd3fc;">{{ result }}</strong></p>
+    <p style="font-size: 1.1rem;">x = <strong style="color: #7dd3fc;">{{ x_val }}</strong>, y = <strong style="color: #7dd3fc;">{{ y_val }}</strong></p>
+    <p style="margin-top: 10px; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 8px;">
+        <code>{{ a_val }} × ({{ x_val }}) + {{ b_val }} × ({{ y_val }}) = {{ result }}</code>
+    </p>
+    {% elif calc_type == 'modinv' %}
+    <h3>{{ a_val }}⁻¹ mod {{ m_val }} = <span style="color: #7dd3fc;">{{ result }}</span></h3>
+    <p style="margin-top: 10px;">Verification: {{ a_val }} × {{ result }} mod {{ m_val }} = {{ (a_val * result) % m_val }}</p>
+    {% endif %}
+</div>
+
+<!-- Step by Step -->
+<h3 style="text-align: center; margin: 30px 0 15px; color: #38bdf8;">📊 Step-by-Step Calculation</h3>
+
+{% if calc_type == 'gcd' %}
+<div class="block-section">
+    <table class="crypto-table">
+        <tr>
+            <th>Step</th>
+            <th>a</th>
+            <th>b</th>
+            <th>q = a÷b</th>
+            <th>r = a mod b</th>
+            <th>Equation</th>
+        </tr>
+        {% for step in steps %}
+        <tr class="{% if step.remainder == 'GCD' %}highlight-row{% endif %}">
+            <td>{{ step.step }}</td>
+            <td>{{ step.a }}</td>
+            <td>{{ step.b }}</td>
+            <td>{{ step.quotient }}</td>
+            <td>{{ step.remainder }}</td>
+            <td style="font-family: monospace;">{{ step.description }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+
+{% elif calc_type == 'extended' or calc_type == 'modinv' %}
+<div class="block-section">
+    {% for phase_name, phase_steps in steps|groupby('phase') %}
+    <div class="phase-section">
+        <h5 style="color: #38bdf8; margin: 20px 0 10px; padding: 10px; background: rgba(56,189,248,0.1); border-radius: 8px;">
+            {{ phase_name }}
+        </h5>
+        <table class="crypto-table">
+            <tr>
+                <th>Step</th>
+                <th>Equation</th>
+                <th>Details</th>
+            </tr>
+            {% for step in phase_steps %}
+            <tr>
+                <td>{{ step.step }}</td>
+                <td style="font-family: monospace;">{{ step.equation }}</td>
+                <td style="font-size: 0.9rem;">{{ step.details }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+{% endif %}
+
+<!-- Formula Reference -->
+<div class="formula-box" style="margin-top: 30px;">
+    <h4 style="color: #38bdf8; margin-bottom: 15px;">📐 Key Formulas</h4>
+    <div class="formula-grid">
+        <div class="formula-item">
+            <h5>GCD</h5>
+            <code>gcd(a, b) = gcd(b, a mod b)</code>
+        </div>
+        <div class="formula-item">
+            <h5>Extended</h5>
+            <code>ax + by = gcd(a, b)</code>
+        </div>
+        <div class="formula-item">
+            <h5>Mod Inverse</h5>
+            <code>a × a⁻¹ ≡ 1 (mod m)</code>
+        </div>
+    </div>
+</div>

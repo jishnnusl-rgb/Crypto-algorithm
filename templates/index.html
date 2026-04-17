@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cryptography Lab</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>🔐 Crypto Lab</h2>
+                <p>Jishnnu S.L<br>23BCS172</p>
+            </div>
+            
+            <ul class="sidebar-menu">
+    <li>
+        <a href="/" class="menu-item {% if page == 'home' %}active{% endif %}">
+            <span class="icon">🏠</span>
+            <span>Home</span>
+        </a>
+    </li>
+    
+    <!-- Exercise 1 -->
+    <li>
+        <div class="menu-item {% if page in ['ex1', 'vigenere', 'playfair', 'affine', 'euclidean', 'fermat'] %}active{% endif %}" 
+             onclick="toggleSubmenu('ex1-submenu')">
+            <span class="icon">📘</span>
+            <span>Ex 1 - Classical</span>
+        </div>
+        <ul id="ex1-submenu" class="submenu {% if page in ['ex1', 'vigenere', 'playfair', 'affine', 'euclidean', 'fermat'] %}open{% endif %}">
+            <li><a href="/vigenere" class="{% if page == 'vigenere' %}active{% endif %}">Vigenere Cipher</a></li>
+            <li><a href="/playfair" class="{% if page == 'playfair' %}active{% endif %}">Playfair Cipher</a></li>
+            <li><a href="/affine" class="{% if page == 'affine' %}active{% endif %}">Affine Cipher</a></li>
+            
+            <li><a href="/euclidean" class="{% if page == 'euclidean' %}active{% endif %}">Euclidean Algorithm</a></li>
+            <li><a href="/fermat" class="{% if page == 'fermat' %}active{% endif %}">Fermat's Theorem</a></li>
+        </ul>
+    </li>
+    
+    <!-- Exercise 2 -->
+    <li>
+        <div class="menu-item {% if page in ['ex2', 'aes', 'des'] %}active{% endif %}"
+             onclick="toggleSubmenu('ex2-submenu')">
+            <span class="icon">📗</span>
+            <span>Ex 2 - AES & DES</span>
+        </div>
+        <ul id="ex2-submenu" class="submenu {% if page in ['ex2', 'aes', 'des'] %}open{% endif %}">
+            <li><a href="/aes" class="{% if page == 'aes' %}active{% endif %}">AES (128-bit)</a></li>
+            <li><a href="/des" class="{% if page == 'des' %}active{% endif %}">DES (64-bit)</a></li>
+        </ul>
+    </li>
+    
+    <!-- Exercise 3: RSA -->
+    <li>
+        <div class="menu-item {% if page in ['ex3', 'rsa'] %}active{% endif %}"
+             onclick="toggleSubmenu('ex3-submenu')">
+            <span class="icon">📙</span>
+            <span>Ex 3 - RSA</span>
+        </div>
+        <ul id="ex3-submenu" class="submenu {% if page in ['ex3', 'rsa'] %}open{% endif %}">
+            <li><a href="/rsa" class="{% if page == 'rsa' %}active{% endif %}">RSA Algorithm</a></li>
+        </ul>
+    </li>
+    
+    <!-- Exercise 4: Placeholder -->
+   <!-- Exercise 4: CMAC & MD5 -->
+<li>
+    <div class="menu-item {% if page in ['ex4', 'cmac', 'md5'] %}active{% endif %}"
+         onclick="toggleSubmenu('ex4-submenu')">
+        <span class="icon">📕</span>
+        <span>Ex 4 - CMAC & MD5</span>
+    </div>
+    <ul id="ex4-submenu" class="submenu {% if page in ['ex4', 'cmac', 'md5'] %}open{% endif %}">
+        <li><a href="/cmac" class="{% if page == 'cmac' %}active{% endif %}">CMAC</a></li>
+        <li><a href="/md5" class="{% if page == 'md5' %}active{% endif %}">MD5 Hash</a></li>
+    </ul>
+</li>
+</ul>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            {% if page == 'home' %}
+                {% include 'pages/home.html' %}
+            {% elif page == 'ex1' %}
+                {% include 'pages/ex1.html' %}
+            {% elif page == 'ex2' %}
+                {% include 'pages/ex2.html' %}
+            {% elif page == 'vigenere' %}
+                {% include 'pages/vigenere.html' %}
+            {% elif page == 'playfair' %}
+                {% include 'pages/playfair.html' %}
+            {% elif page == 'affine' %}
+                {% include 'pages/affine.html' %}
+            {% elif page == 'aes' %}
+                {% include 'pages/aes.html' %}
+            {% elif page == 'des' %}
+                {% include 'pages/des.html' %}
+            {% elif page == 'fermat' %}
+    {% include 'pages/fermat.html' %}
+{% elif page == 'euclidean' %}
+    {% include 'pages/euclidean.html' %}
+    {% elif page == 'ex3' %}
+    {% include 'pages/ex3.html' %}
+{% elif page == 'rsa' %}
+    {% include 'pages/rsa.html' %}
+    {% elif page == 'ex4' %}
+    {% include 'pages/ex4.html' %}
+{% elif page == 'cmac' %}
+    {% include 'pages/cmac.html' %}
+{% elif page == 'md5' %}
+    {% include 'pages/md5.html' %}
+            {% endif %}
+            
+        </main>
+    </div>
+
+    <script>
+        function toggleSubmenu(id) {
+            const submenu = document.getElementById(id);
+            submenu.classList.toggle('open');
+        }
+    </script>
+</body>
+</html>

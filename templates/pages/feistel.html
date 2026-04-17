@@ -1,0 +1,123 @@
+<div class="section-header">
+    <h1>🔄 Feistel Cipher</h1>
+    <p>Symmetric Block Cipher Structure</p>
+</div>
+
+<a href="/ex1" class="back-btn">← Back to Ex1</a>
+
+<div class="info-box">
+    <h4>About Feistel Cipher:</h4>
+    <p>Splits data into two halves and applies multiple rounds of processing.</p>
+    <p><strong>Round Formula:</strong> L<sub>i+1</sub> = R<sub>i</sub>, R<sub>i+1</sub> = L<sub>i</sub> ⊕ F(R<sub>i</sub>, K<sub>i</sub>)</p>
+</div>
+
+<div class="cipher-container">
+    <div class="card" style="width: 380px;">
+        <h2>Encrypt / Decrypt</h2>
+        <form method="post">
+            <input name="text" placeholder="{% if mode == 'dec' %}Ciphertext (hex){% else %}Plaintext{% endif %}" required>
+            <input name="key" placeholder="Key (any text)" required>
+            
+            <div class="key-format-section">
+                <p>Number of Rounds:</p>
+                <select name="rounds">
+                    <option value="2" {% if num_rounds == 2 %}selected{% endif %}>2 Rounds</option>
+                    <option value="4" {% if num_rounds == 4 or not num_rounds %}selected{% endif %}>4 Rounds</option>
+                    <option value="8" {% if num_rounds == 8 %}selected{% endif %}>8 Rounds</option>
+                    <option value="16" {% if num_rounds == 16 %}selected{% endif %}>16 Rounds</option>
+                </select>
+            </div>
+            
+            <select name="mode">
+                <option value="enc" {% if mode == 'enc' %}selected{% endif %}>Encrypt</option>
+                <option value="dec" {% if mode == 'dec' %}selected{% endif %}>Decrypt</option>
+            </select>
+            
+            <button type="submit">🔄 Run Feistel</button>
+        </form>
+    </div>
+</div>
+
+{% if error %}
+<div class="error-box">
+    <h3>⚠️ Error</h3>
+    <p>{{ error }}</p>
+</div>
+{% endif %}
+
+{% if result %}
+<div class="result-box">
+    <h3>{{ "🔒 Encrypted" if mode == "enc" else "🔓 Decrypted" }}:</h3>
+    <p style="word-break: break-all; font-family: monospace; font-size: 1.2rem; margin-top: 10px; color: #7dd3fc;">{{ result }}</p>
+    <p style="margin-top: 10px;">Rounds: {{ num_rounds }}</p>
+</div>
+
+<!-- Feistel Structure Diagram -->
+<div class="feistel-diagram">
+    <h3 style="text-align: center; color: #38bdf8; margin: 30px 0 20px;">🔄 Feistel Structure</h3>
+    <div class="diagram-container">
+        <div class="diagram-box">
+            <div class="diagram-row">
+                <div class="diagram-half">L<sub>i</sub></div>
+                <div class="diagram-half">R<sub>i</sub></div>
+            </div>
+            <div class="diagram-arrow">↓ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ↓</div>
+            <div class="diagram-row">
+                <div class="diagram-xor">⊕ ←──</div>
+                <div class="diagram-func">F(R<sub>i</sub>, K<sub>i</sub>)</div>
+            </div>
+            <div class="diagram-arrow">↓ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ↓</div>
+            <div class="diagram-row">
+                <div class="diagram-half">L<sub>i+1</sub></div>
+                <div class="diagram-half">R<sub>i+1</sub></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Intermediate Steps -->
+<h3 style="text-align: center; margin: 30px 0 15px; color: #38bdf8;">📊 Intermediate Steps</h3>
+
+{% for block in steps %}
+<div class="block-section">
+    <h4>Block {{ block.block_num }}</h4>
+    <p><strong>Input:</strong> <code>{{ block.input }}</code></p>
+    <p><strong>Output:</strong> <code>{{ block.output }}</code></p>
+    
+    <details open>
+        <summary>View Round Details</summary>
+        <table class="crypto-table" style="margin-top: 15px;">
+            <tr>
+                <th>Round</th>
+                <th>L (in)</th>
+                <th>R (in)</th>
+                <th>Round Key</th>
+                <th>F(R, K)</th>
+                <th>L (out)</th>
+                <th>R (out)</th>
+            </tr>
+            {% for round in block.rounds %}
+            <tr>
+                <td>{{ round.round }}</td>
+                <td style="font-family: monospace;">{{ round.L_in if round.L_in else round.L if round.L else '-' }}</td>
+                <td style="font-family: monospace;">{{ round.R_in if round.R_in else round.R if round.R else '-' }}</td>
+                <td style="font-family: monospace;">{{ round.round_key if round.round_key else '-' }}</td>
+                <td style="font-family: monospace;">{{ round.f_output if round.f_output else '-' }}</td>
+                <td style="font-family: monospace;">{{ round.L_out if round.L_out else '-' }}</td>
+                <td style="font-family: monospace;">{{ round.R_out if round.R_out else round.output if round.output else '-' }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </details>
+</div>
+{% endfor %}
+
+<div class="info-box" style="margin-top: 30px;">
+    <h4>Feistel Operations:</h4>
+    <p>1. <strong>Split:</strong> Divide block into L and R halves</p>
+    <p>2. <strong>F Function:</strong> Apply F(R, K) with round key</p>
+    <p>3. <strong>XOR:</strong> L ⊕ F result = new R</p>
+    <p>4. <strong>Swap:</strong> Old R becomes new L</p>
+    <p>5. <strong>Final Swap:</strong> After last round</p>
+</div>
+{% endif %}

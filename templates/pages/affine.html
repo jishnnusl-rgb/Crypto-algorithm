@@ -1,0 +1,99 @@
+<div class="section-header">
+    <h1>📐 Affine Cipher</h1>
+    <p>E(x) = (a·x + b) mod 26</p>
+</div>
+
+<a href="/ex1" class="back-btn">← Back to Ex1</a>
+
+<div class="info-box">
+    <p><strong>Important:</strong> Value of <code>a</code> must be coprime with 26 (gcd(a, 26) = 1)</p>
+    <p><strong>Valid values of a:</strong> {{ valid_a_values|join(', ') }}</p>
+</div>
+
+<div class="cipher-container">
+    <div class="card">
+        <h2>Encrypt / Decrypt</h2>
+        <form method="post">
+            <input name="text" placeholder="Text" required>
+            <input name="a" type="number" placeholder="a (must be coprime with 26)" required>
+            <input name="b" type="number" placeholder="b" required>
+            <select name="mode">
+                <option value="enc">Encrypt</option>
+                <option value="dec">Decrypt</option>
+            </select>
+            <button type="submit">Run</button>
+        </form>
+    </div>
+</div>
+
+{% if error %}
+<div class="error-box">
+    <h3>⚠️ Error</h3>
+    <p>{{ error }}</p>
+</div>
+{% endif %}
+
+{% if result %}
+<div class="result-box">
+    <h3>{{ "🔒 Encrypted" if mode == "enc" else "🔓 Decrypted" }}: {{ result }}</h3>
+    {% if inv %}
+    <p>a⁻¹ mod 26 = {{ inv }}</p>
+    {% endif %}
+</div>
+
+<h3 style="text-align:center; margin-top:30px; color:#38bdf8;">📊 Step-by-Step Calculation</h3>
+
+{% if mode == "enc" %}
+<table class="crypto-table">
+    <tr>
+        <th>Char (P)</th>
+        <th>P value</th>
+        <th>a × P</th>
+        <th>a×P + b</th>
+        <th>mod 26</th>
+        <th>Cipher (C)</th>
+    </tr>
+    {% for s in steps %}
+    <tr>
+        <td>{{ s.p }}</td>
+        <td>{{ s.pval }}</td>
+        <td>{{ s.ap }}</td>
+        <td>{{ s.apb }}</td>
+        <td>{{ s.cval }}</td>
+        <td>{{ s.c }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+<div class="info-box">
+    <p><strong>Encryption Formula:</strong> C = (a × P + b) mod 26</p>
+</div>
+{% else %}
+<table class="crypto-table">
+    <tr>
+        <th>Cipher (C)</th>
+        <th>C value</th>
+        <th>C - b</th>
+        <th>a⁻¹</th>
+        <th>a⁻¹ × (C-b)</th>
+        <th>mod 26</th>
+        <th>Plain (P)</th>
+    </tr>
+    {% for s in steps %}
+    <tr>
+        <td>{{ s.c }}</td>
+        <td>{{ s.cval }}</td>
+        <td>{{ s.cmb }}</td>
+        <td>{{ s.inv }}</td>
+        <td>{{ s.mul }}</td>
+        <td>{{ s.mod }}</td>
+        <td>{{ s.p }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+<div class="info-box">
+    <p><strong>Decryption Formula:</strong> P = a⁻¹ × (C - b) mod 26</p>
+</div>
+{% endif %}
+{% endif %}

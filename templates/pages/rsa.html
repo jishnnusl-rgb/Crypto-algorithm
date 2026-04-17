@@ -1,0 +1,284 @@
+<div class="section-header">
+    <h1>🔐 RSA Algorithm</h1>
+    <p>Rivest-Shamir-Adleman Public Key Cryptosystem</p>
+</div>
+
+<a href="/ex3" class="back-btn">← Back to Ex3</a>
+
+<div class="info-box">
+    <h4>RSA Algorithm Overview:</h4>
+    <p><strong>Key Generation:</strong> Choose primes p, q → n = p×q → φ(n) = (p-1)(q-1) → Choose e → d = e⁻¹ mod φ(n)</p>
+    <p><strong>Encryption:</strong> C = M<sup>e</sup> mod n</p>
+    <p><strong>Decryption:</strong> M = C<sup>d</sup> mod n</p>
+</div>
+
+<!-- Key Generation Section -->
+<div class="rsa-section">
+    <h3 style="color: #38bdf8; text-align: center; margin-bottom: 20px;">🔑 Key Generation</h3>
+    <div class="cipher-container">
+        <div class="card" style="width: 450px;">
+            <h2>Generate RSA Keys</h2>
+            <form method="post">
+                <input type="hidden" name="operation" value="keygen">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <input name="p" type="number" placeholder="Prime p (e.g., 61)" required value="{{ p_val if p_val else '' }}">
+                    <input name="q" type="number" placeholder="Prime q (e.g., 53)" required value="{{ q_val if q_val else '' }}">
+                </div>
+                <input name="e" type="number" placeholder="e (optional, default: 17 or 65537)" value="{{ e_val if e_val and operation == 'keygen' else '' }}">
+                <p style="font-size: 0.85rem; color: #94a3b8;">Leave e empty for automatic selection</p>
+                <button type="submit">🔑 Generate Keys</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% if key_error and operation == 'keygen' %}
+<div class="error-box">
+    <h3>⚠️ Key Generation Error</h3>
+    <p>{{ key_error }}</p>
+</div>
+{% endif %}
+
+{% if key_result %}
+<div class="result-box">
+    <h3>🔑 Generated RSA Keys</h3>
+    <div class="key-display">
+        <div class="key-item">
+            <span class="key-label">n (modulus):</span>
+            <span class="key-value">{{ key_result.n }}</span>
+        </div>
+        <div class="key-item">
+            <span class="key-label">φ(n):</span>
+            <span class="key-value">{{ key_result.phi_n }}</span>
+        </div>
+        <div class="key-item public">
+            <span class="key-label">🌐 Public Key (e, n):</span>
+            <span class="key-value">({{ key_result.e }}, {{ key_result.n }})</span>
+        </div>
+        <div class="key-item private">
+            <span class="key-label">🔒 Private Key (d, n):</span>
+            <span class="key-value">({{ key_result.d }}, {{ key_result.n }})</span>
+        </div>
+    </div>
+</div>
+
+<!-- Key Generation Steps -->
+<h3 style="text-align: center; margin: 30px 0 15px; color: #38bdf8;">📊 Key Generation Steps</h3>
+<div class="block-section">
+    <table class="crypto-table">
+        <tr>
+            <th>Phase</th>
+            <th>Step</th>
+            <th>Operation</th>
+            <th>Value</th>
+            <th>Details</th>
+        </tr>
+        {% for step in key_steps %}
+        <tr class="{% if step.highlight %}highlight-row{% endif %}">
+            <td>{{ step.phase }}</td>
+            <td>{{ step.step }}</td>
+            <td>{{ step.operation }}</td>
+            <td style="font-family: monospace; color: #7dd3fc;">{{ step.value }}</td>
+            <td>{{ step.details }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+{% endif %}
+
+<hr style="border: 1px solid rgba(56, 189, 248, 0.2); margin: 40px 0;">
+
+<!-- Encryption Section -->
+<div class="rsa-section">
+    <h3 style="color: #38bdf8; text-align: center; margin-bottom: 20px;">🔒 Encryption</h3>
+    <div class="cipher-container">
+        <div class="card" style="width: 450px;">
+            <h2>Encrypt Message</h2>
+            <form method="post">
+                <input type="hidden" name="operation" value="encrypt">
+                <input name="plaintext" placeholder="Plaintext message" required>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <input name="enc_e" type="number" placeholder="Public key e" required value="{{ key_result.e if key_result else '' }}">
+                    <input name="enc_n" type="number" placeholder="Modulus n" required value="{{ key_result.n if key_result else '' }}">
+                </div>
+                <button type="submit">🔒 Encrypt</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% if enc_error %}
+<div class="error-box">
+    <h3>⚠️ Encryption Error</h3>
+    <p>{{ enc_error }}</p>
+</div>
+{% endif %}
+
+{% if enc_result %}
+<div class="result-box">
+    <h3>🔒 Encrypted Result</h3>
+    <p style="word-break: break-all; font-family: monospace; font-size: 1.1rem; margin-top: 10px; color: #7dd3fc;">
+        {{ enc_result }}
+    </p>
+</div>
+
+<h3 style="text-align: center; margin: 30px 0 15px; color: #38bdf8;">📊 Encryption Steps</h3>
+<div class="block-section">
+    <table class="crypto-table">
+        <tr>
+            <th>Step</th>
+            <th>Char</th>
+            <th>ASCII (M)</th>
+            <th>Operation</th>
+            <th>Calculation</th>
+            <th>Cipher (C)</th>
+        </tr>
+        {% for step in enc_steps %}
+        <tr class="{% if step.highlight %}highlight-row{% endif %}">
+            <td>{{ step.step }}</td>
+            <td>{{ step.char }}</td>
+            <td>{{ step.ascii }}</td>
+            <td>{{ step.operation }}</td>
+            <td style="font-family: monospace;">{{ step.calculation }}</td>
+            <td style="font-family: monospace; color: #7dd3fc;">{{ step.result }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+{% endif %}
+
+<hr style="border: 1px solid rgba(56, 189, 248, 0.2); margin: 40px 0;">
+
+<!-- Decryption Section -->
+<div class="rsa-section">
+    <h3 style="color: #38bdf8; text-align: center; margin-bottom: 20px;">🔓 Decryption</h3>
+    <div class="cipher-container">
+        <div class="card" style="width: 450px;">
+            <h2>Decrypt Message</h2>
+            <form method="post">
+                <input type="hidden" name="operation" value="decrypt">
+                <input name="ciphertext" placeholder="Ciphertext (space-separated numbers)" required value="{{ enc_result if enc_result else '' }}">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <input name="dec_d" type="number" placeholder="Private key d" required value="{{ key_result.d if key_result else '' }}">
+                    <input name="dec_n" type="number" placeholder="Modulus n" required value="{{ key_result.n if key_result else '' }}">
+                </div>
+                <button type="submit">🔓 Decrypt</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% if dec_error %}
+<div class="error-box">
+    <h3>⚠️ Decryption Error</h3>
+    <p>{{ dec_error }}</p>
+</div>
+{% endif %}
+
+{% if dec_result %}
+<div class="result-box">
+    <h3>🔓 Decrypted Result</h3>
+    <p style="font-size: 1.3rem; margin-top: 10px; color: #86efac;">
+        {{ dec_result }}
+    </p>
+</div>
+
+<h3 style="text-align: center; margin: 30px 0 15px; color: #38bdf8;">📊 Decryption Steps</h3>
+<div class="block-section">
+    <table class="crypto-table">
+        <tr>
+            <th>Step</th>
+            <th>Cipher (C)</th>
+            <th>Operation</th>
+            <th>Calculation</th>
+            <th>ASCII (M)</th>
+            <th>Char</th>
+        </tr>
+        {% for step in dec_steps %}
+        <tr class="{% if step.highlight %}highlight-row{% endif %}">
+            <td>{{ step.step }}</td>
+            <td style="font-family: monospace;">{{ step.cipher }}</td>
+            <td>{{ step.operation }}</td>
+            <td style="font-family: monospace;">{{ step.calculation }}</td>
+            <td>{{ step.ascii }}</td>
+            <td style="color: #86efac; font-weight: bold;">{{ step.char }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+{% endif %}
+
+<!-- Formula Reference -->
+<div class="formula-box" style="margin-top: 40px;">
+    <h4 style="color: #38bdf8; margin-bottom: 15px;">📐 RSA Formulas</h4>
+    
+    <div class="formula-grid">
+        <div class="formula-item">
+            <h5>Key Generation</h5>
+            <code>n = p × q</code>
+            <code>φ(n) = (p-1)(q-1)</code>
+            <code>d = e⁻¹ mod φ(n)</code>
+        </div>
+        
+        <div class="formula-item">
+            <h5>Encryption</h5>
+            <code>C = M<sup>e</sup> mod n</code>
+            <p>M = plaintext, C = ciphertext</p>
+        </div>
+        
+        <div class="formula-item">
+            <h5>Decryption</h5>
+            <code>M = C<sup>d</sup> mod n</code>
+            <p>Using private key d</p>
+        </div>
+        
+        <div class="formula-item">
+            <h5>Requirements</h5>
+            <code>gcd(e, φ(n)) = 1</code>
+            <code>1 < e < φ(n)</code>
+            <p>e and d are inverses</p>
+        </div>
+    </div>
+</div>
+
+<!-- Example Section -->
+<div class="examples-section">
+    <h4 style="color: #38bdf8; margin: 30px 0 15px; text-align: center;">💡 Example</h4>
+    <div class="example-cards">
+        <div class="example-card">
+            <h5>Step 1: Choose Primes</h5>
+            <p>p = 61, q = 53</p>
+            <p>n = 61 × 53 = <strong>3233</strong></p>
+        </div>
+        
+        <div class="example-card">
+            <h5>Step 2: Calculate φ(n)</h5>
+            <p>φ(n) = (61-1)(53-1)</p>
+            <p>φ(n) = 60 × 52 = <strong>3120</strong></p>
+        </div>
+        
+        <div class="example-card">
+            <h5>Step 3: Choose e</h5>
+            <p>e = 17</p>
+            <p>gcd(17, 3120) = 1 ✓</p>
+        </div>
+        
+        <div class="example-card">
+            <h5>Step 4: Calculate d</h5>
+            <p>d = 17⁻¹ mod 3120</p>
+            <p>d = <strong>2753</strong></p>
+        </div>
+        
+        <div class="example-card">
+            <h5>Encrypt 'A' (65)</h5>
+            <p>C = 65<sup>17</sup> mod 3233</p>
+            <p>C = <strong>2790</strong></p>
+        </div>
+        
+        <div class="example-card">
+            <h5>Decrypt 2790</h5>
+            <p>M = 2790<sup>2753</sup> mod 3233</p>
+            <p>M = <strong>65</strong> = 'A'</p>
+        </div>
+    </div>
+</div>

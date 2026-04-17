@@ -1,0 +1,113 @@
+<div class="section-header">
+    <h1>🔢 MD5 Hash Algorithm</h1>
+    <p>Message Digest Algorithm 5</p>
+</div>
+
+<a href="/ex4" class="back-btn">← Back to Ex4</a>
+
+<div class="cipher-container">
+    <div class="card">
+        <h2>Generate MD5 Hash</h2>
+        <form method="post">
+            <input name="message" placeholder="Message to hash" required>
+            <button type="submit">Generate Hash</button>
+        </form>
+    </div>
+</div>
+
+{% if error %}
+<div class="error-box">
+    <h3>⚠️ Error</h3>
+    <p>{{ error }}</p>
+</div>
+{% endif %}
+
+{% if result %}
+<div class="result-box">
+    <h3>🔑 MD5 Hash: {{ result }}</h3>
+</div>
+
+{% if steps %}
+    {% for step_group in steps %}
+        {% if step_group.phase == 'Padding' %}
+        <div class="block-section">
+            <h4>📝 Padding</h4>
+            <p><strong>Original Message:</strong> "{{ step_group.original_message }}"</p>
+            <p><strong>Original Length:</strong> {{ step_group.original_length }} bytes ({{ step_group.bit_length }} bits)</p>
+            <p><strong>Padded Length:</strong> {{ step_group.padded_length }} bytes</p>
+            <p><strong>Padded (Hex):</strong> <code>{{ step_group.padded_hex }}</code></p>
+        </div>
+        
+        {% elif step_group.phase == 'Initialization' %}
+        <div class="block-section">
+            <h4>🔧 Initialization</h4>
+            <p><strong>A:</strong> <code>{{ step_group.A }}</code></p>
+            <p><strong>B:</strong> <code>{{ step_group.B }}</code></p>
+            <p><strong>C:</strong> <code>{{ step_group.C }}</code></p>
+            <p><strong>D:</strong> <code>{{ step_group.D }}</code></p>
+        </div>
+        
+        {% elif step_group.phase == 'Block Processing' %}
+        <div class="block-section">
+            <h4>⚙️ Block Processing ({{ step_group.blocks|length }} block(s))</h4>
+            {% for block in step_group.blocks %}
+            <details>
+                <summary>Block {{ block.block_num }}</summary>
+                <p><strong>Block (Hex):</strong> <code>{{ block.block_hex }}</code></p>
+                
+                <table class="crypto-table" style="margin-top:10px;">
+                    <tr>
+                        <th>Round</th>
+                        <th>A</th>
+                        <th>B</th>
+                        <th>C</th>
+                        <th>D</th>
+                        <th>Func</th>
+                    </tr>
+                    {% for s in block.steps %}
+                    <tr>
+                        <td>{{ s.round }}</td>
+                        <td><code>{{ s.A }}</code></td>
+                        <td><code>{{ s.B }}</code></td>
+                        <td><code>{{ s.C }}</code></td>
+                        <td><code>{{ s.D }}</code></td>
+                        <td>{{ s.func if s.func is defined else '-' }}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+                
+                <p style="margin-top:15px;"><strong>State After Block:</strong></p>
+                <p>A: <code>{{ block.state_after.A }}</code></p>
+                <p>B: <code>{{ block.state_after.B }}</code></p>
+                <p>C: <code>{{ block.state_after.C }}</code></p>
+                <p>D: <code>{{ block.state_after.D }}</code></p>
+            </details>
+            {% endfor %}
+        </div>
+        
+        {% elif step_group.phase == 'Final Hash' %}
+        <div class="block-section">
+            <h4>✅ Final Hash</h4>
+            <p><strong>MD5 Hash:</strong> <code>{{ step_group.hash }}</code></p>
+            <p><strong>Length:</strong> {{ step_group.hash_length }} bits</p>
+        </div>
+        {% endif %}
+    {% endfor %}
+{% endif %}
+
+<div class="info-box">
+    <h3>ℹ️ About MD5</h3>
+    <p><strong>MD5</strong> (Message Digest Algorithm 5) is a widely used cryptographic hash function.</p>
+    <p><strong>Characteristics:</strong></p>
+    <p>• Produces 128-bit (16-byte) hash value</p>
+    <p>• Processes message in 512-bit (64-byte) blocks</p>
+    <p>• Uses 4 rounds with 16 operations each (64 total)</p>
+    <p>• Four auxiliary functions: F, G, H, I</p>
+    <p>• <strong>Note:</strong> MD5 is cryptographically broken - use for learning only!</p>
+    <p><strong>MD5 Rounds:</strong></p>
+    <p>• Round 1 (0-15): F(B,C,D) = (B ∧ C) ∨ (¬B ∧ D)</p>
+    <p>• Round 2 (16-31): G(B,C,D) = (B ∧ D) ∨ (C ∧ ¬D)</p>
+    <p>• Round 3 (32-47): H(B,C,D) = B ⊕ C ⊕ D</p>
+    <p>• Round 4 (48-63): I(B,C,D) = C ⊕ (B ∨ ¬D)</p>
+</div>
+{% endif %}

@@ -1,0 +1,83 @@
+<div class="section-header">
+    <h1>🔑 Vigenere Cipher</h1>
+    <p>Polyalphabetic Substitution Cipher</p>
+</div>
+
+<a href="/ex1" class="back-btn">← Back to Ex1</a>
+
+<div class="cipher-container">
+    <div class="card">
+        <h2>Encrypt</h2>
+        <form method="post">
+            <input type="hidden" name="mode" value="enc">
+            <input name="text" placeholder="Plain Text" required>
+            <input name="key" placeholder="Key (letters only)" required>
+            <button type="submit">🔒 Encrypt</button>
+        </form>
+    </div>
+    
+    <div class="card">
+        <h2>Decrypt</h2>
+        <form method="post">
+            <input type="hidden" name="mode" value="dec">
+            <input name="text" placeholder="Cipher Text" required>
+            <input name="key" placeholder="Key (letters only)" required>
+            <button type="submit">🔓 Decrypt</button>
+        </form>
+    </div>
+</div>
+
+{% if error %}
+<div class="error-box">
+    <h3>⚠️ Error</h3>
+    <p>{{ error }}</p>
+</div>
+{% endif %}
+
+{% if result %}
+<div class="result-box">
+    <h3>{{ "🔒 Encrypted" if mode == "enc" else "🔓 Decrypted" }}: {{ result }}</h3>
+</div>
+
+<h3 style="text-align:center; margin-top:30px; color:#38bdf8;">📊 Step-by-Step Calculation</h3>
+<table class="crypto-table">
+    <tr>
+        <th>#</th>
+        {% for s in steps %}<td>{{ loop.index }}</td>{% endfor %}
+    </tr>
+    <tr>
+        <th>{{ "P" if mode == "enc" else "C" }}</th>
+        {% for s in steps %}<td>{{ s.p if mode == "enc" else s.c }}</td>{% endfor %}
+    </tr>
+    <tr>
+        <th>Value</th>
+        {% for s in steps %}<td>{{ s.pval if mode == "enc" else s.cval }}</td>{% endfor %}
+    </tr>
+    <tr>
+        <th>K</th>
+        {% for s in steps %}<td>{{ s.k }}</td>{% endfor %}
+    </tr>
+    <tr>
+        <th>K Value</th>
+        {% for s in steps %}<td>{{ s.kval }}</td>{% endfor %}
+    </tr>
+    <tr>
+        <th>{{ "C" if mode == "enc" else "P" }}</th>
+        {% for s in steps %}<td>{{ s.c if mode == "enc" else s.p }}</td>{% endfor %}
+    </tr>
+    <tr>
+        <th>Result</th>
+        {% for s in steps %}<td>{{ s.cval if mode == "enc" else s.pval }}</td>{% endfor %}
+    </tr>
+</table>
+
+<div class="info-box">
+    <p><strong>Formula:</strong> 
+        {% if mode == "enc" %}
+        C = (P + K) mod 26
+        {% else %}
+        P = (C - K) mod 26
+        {% endif %}
+    </p>
+</div>
+{% endif %}

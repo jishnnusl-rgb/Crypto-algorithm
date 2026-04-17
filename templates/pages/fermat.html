@@ -1,0 +1,193 @@
+<div class="section-header">
+    <h1>🔢 Fermat's Little Theorem</h1>
+    <p>a<sup>p-1</sup> ≡ 1 (mod p) when p is prime</p>
+</div>
+
+<a href="/ex1" class="back-btn">← Back to Ex1</a>
+
+<div class="info-box">
+    <h4>Fermat's Little Theorem:</h4>
+    <p>If <strong>p</strong> is a prime number and <strong>a</strong> is not divisible by p, then:</p>
+    <p style="text-align: center; font-size: 1.3rem; margin: 15px 0;">
+        <code>a<sup>p-1</sup> ≡ 1 (mod p)</code>
+    </p>
+    <p><strong>Applications in Cryptography:</strong></p>
+    <p>• Primality Testing • Modular Inverse Calculation • RSA Algorithm • Fast Modular Exponentiation</p>
+</div>
+
+<div class="cipher-container">
+    <!-- Verify Fermat's Theorem -->
+    <div class="card">
+        <h2>Verify Theorem</h2>
+        <form method="post">
+            <input type="hidden" name="calc_type" value="verify">
+            <input name="a" type="number" placeholder="Enter base a" required>
+            <input name="p" type="number" placeholder="Enter prime p" required>
+            <button type="submit">Verify a<sup>p-1</sup> ≡ 1 (mod p)</button>
+        </form>
+        <p style="font-size: 0.85rem; color: #94a3b8; margin-top: 10px;">
+            Checks if a<sup>p-1</sup> mod p = 1
+        </p>
+    </div>
+    
+    <!-- Modular Exponentiation -->
+   
+    
+    <!-- Modular Inverse using Fermat -->
+    
+</div>
+
+
+
+{% if error %}
+<div class="error-box">
+    <h3> Error</h3>
+    <p>{{ error }}</p>
+</div>
+{% endif %}
+
+{% if result is not none %}
+<div class="result-box">
+    {% if calc_type == 'verify' %}
+        <h3>Fermat's Theorem Verification</h3>
+        <p style="font-size: 1.2rem; margin-top: 15px;">
+            {{ a_val }}<sup>{{ p_val - 1 }}</sup> mod {{ p_val }} = <strong style="color: #7dd3fc;">{{ result }}</strong>
+        </p>
+        {% if result == 1 %}
+        <p style="color: #86efac; margin-top: 10px;"> Theorem verified! ({{ p_val }} is likely prime)</p>
+        {% else %}
+        <p style="color: #fca5a5; margin-top: 10px;"> Theorem not satisfied ({{ p_val }} is NOT prime or {{ a_val }} is divisible by {{ p_val }})</p>
+        {% endif %}
+    
+    {% elif calc_type == 'modexp' %}
+        <h3>Modular Exponentiation Result</h3>
+        <p style="font-size: 1.2rem; margin-top: 15px;">
+            {{ base_val }}<sup>{{ exp_val }}</sup> mod {{ mod_val }} = <strong style="color: #7dd3fc;">{{ result }}</strong>
+        </p>
+    
+    {% elif calc_type == 'modinv' %}
+        <h3>Modular Inverse (Using Fermat)</h3>
+        <p style="font-size: 1.2rem; margin-top: 15px;">
+            {{ a_val }}<sup>-1</sup> mod {{ p_val }} = <strong style="color: #7dd3fc;">{{ result }}</strong>
+        </p>
+        <p style="margin-top: 10px;">
+            Calculated as: {{ a_val }}<sup>{{ p_val - 2 }}</sup> mod {{ p_val }} = {{ result }}
+        </p>
+        <p style="margin-top: 5px; color: #94a3b8;">
+            Verification: {{ a_val }} × {{ result }} mod {{ p_val }} = {{ (a_val * result) % p_val }}
+        </p>
+    
+    {% elif calc_type == 'primality' %}
+        <h3>Fermat Primality Test</h3>
+        <p style="font-size: 1.2rem; margin-top: 15px;">
+            {{ n_val }} is 
+            {% if is_prime %}
+            <strong style="color: #86efac;">PROBABLY PRIME</strong>
+            {% else %}
+            <strong style="color: #fca5a5;">COMPOSITE (NOT PRIME)</strong>
+            {% endif %}
+        </p>
+        <p style="margin-top: 10px; color: #94a3b8;">
+            Tested with {{ k_val }} random bases
+        </p>
+    
+    {% elif calc_type == 'euler' %}
+        <h3>Euler's Theorem Verification</h3>
+        <p style="font-size: 1.2rem; margin-top: 15px;">
+            {{ a_val }}<sup>φ({{ n_val }})</sup> mod {{ n_val }} = {{ a_val }}<sup>{{ phi_val }}</sup> mod {{ n_val }} = <strong style="color: #7dd3fc;">{{ result }}</strong>
+        </p>
+        <p style="margin-top: 10px;">
+            φ({{ n_val }}) = <strong style="color: #7dd3fc;">{{ phi_val }}</strong>
+        </p>
+        {% if result == 1 %}
+        <p style="color: #86efac; margin-top: 10px;">✅ Euler's theorem verified!</p>
+        {% else %}
+        <p style="color: #fca5a5; margin-top: 10px;">❌ GCD({{ a_val }}, {{ n_val }}) ≠ 1</p>
+        {% endif %}
+    {% endif %}
+</div>
+
+<!-- Step by Step -->
+<h3 style="text-align: center; margin: 30px 0 15px; color: #38bdf8;">📊 Step-by-Step Calculation</h3>
+
+<div class="block-section">
+    <table class="crypto-table">
+        <tr>
+            <th>Step</th>
+            <th>Operation</th>
+            <th>Value</th>
+            <th>Details</th>
+        </tr>
+        {% for step in steps %}
+        <tr class="{% if step.highlight %}highlight-row{% endif %}">
+            <td>{{ step.step }}</td>
+            <td style="font-family: monospace;">{{ step.operation }}</td>
+            <td style="font-family: monospace; color: #7dd3fc;">{{ step.value }}</td>
+            <td style="font-size: 0.9rem;">{{ step.details }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+{% endif %}
+
+<!-- Formula Reference -->
+<div class="formula-box" style="margin-top: 30px;">
+    <h4 style="color: #38bdf8; margin-bottom: 15px;">📐 Key Theorems & Formulas</h4>
+    
+    <div class="formula-grid">
+        <div class="formula-item">
+            <h5>Fermat's Little Theorem</h5>
+            <code>a<sup>p-1</sup> ≡ 1 (mod p)</code>
+            <p>p is prime, gcd(a,p) = 1</p>
+        </div>
+        
+        <div class="formula-item">
+            <h5>Modular Inverse</h5>
+            <code>a<sup>-1</sup> ≡ a<sup>p-2</sup> (mod p)</code>
+            <p>When p is prime</p>
+        </div>
+        
+        <div class="formula-item">
+            <h5>Euler's Theorem</h5>
+            <code>a<sup>φ(n)</sup> ≡ 1 (mod n)</code>
+            <p>gcd(a, n) = 1</p>
+        </div>
+        
+        <div class="formula-item">
+            <h5>Euler's Totient</h5>
+            <code>φ(n) = n × ∏(1 - 1/p)</code>
+            <p>p divides n</p>
+        </div>
+    </div>
+</div>
+
+<!-- Examples Section -->
+<div class="examples-section">
+    <h4 style="color: #38bdf8; margin: 30px 0 15px; text-align: center;">💡 Examples</h4>
+    <div class="example-cards">
+        <div class="example-card">
+            <h5>Fermat's Theorem</h5>
+            <p>a = 2, p = 7</p>
+            <p>2<sup>6</sup> mod 7</p>
+            <p>= 64 mod 7</p>
+            <p><strong>= 1 ✓</strong></p>
+        </div>
+        
+        <div class="example-card">
+            <h5>Modular Inverse</h5>
+            <p>Find 3<sup>-1</sup> mod 7</p>
+            <p>= 3<sup>7-2</sup> mod 7</p>
+            <p>= 3<sup>5</sup> mod 7</p>
+            <p>= 243 mod 7 = <strong>5</strong></p>
+            <p>Verify: 3×5 = 15 ≡ 1 (mod 7)</p>
+        </div>
+        
+        <div class="example-card">
+            <h5>Euler's Theorem</h5>
+            <p>a = 3, n = 10</p>
+            <p>φ(10) = φ(2)×φ(5) = 4</p>
+            <p>3<sup>4</sup> mod 10</p>
+            <p>= 81 mod 10 = <strong>1 ✓</strong></p>
+        </div>
+    </div>
+</div>
