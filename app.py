@@ -4,7 +4,7 @@ import numpy as np
 import random
 import struct
 import math
-
+import os
 
 app = Flask(__name__)
 
@@ -982,6 +982,273 @@ def rsa_decrypt_text(cipher_text, d, n):
 
 
 # ============================================================
+#                    DIFFIE-HELLMAN KEY EXCHANGE
+# ============================================================
+
+def is_prime_dh(n):
+    """Check if number is prime"""
+    if n < 2:
+        return False
+    if n == 2:
+        return True
+    if n % 2 == 0:
+        return False
+    for i in range(3, int(n**0.5) + 1, 2):
+        if n % i == 0:
+            return False
+    return True
+
+
+def find_primitive_root(p):
+    """Find primitive root (generator) for prime p"""
+    if p == 2:
+        return 1
+    
+    # Factorize p-1
+    phi = p - 1
+    factors = []
+    n = phi
+    i = 2
+    while i * i <= n:
+        if n % i == 0:
+            factors.append(i)
+            while n % i == 0:
+                n //= i
+        i += 1
+    if n > 1:
+        factors.append(n)
+    
+    # Find g such that g^((p-1)/qi) != 1 for all prime factors qi
+    for g in range(2, p):
+        found = True
+        for q in factors:
+            result = mod_exp_simple(g, phi // q, p)
+            if result == 1:
+                found = False
+                break
+        if found:
+            return g
+    return None
+
+
+def validate_dh_parameters(p, g):
+    """Validate DH parameters"""
+    errors = []
+    
+    if not is_prime_dh(p):
+        errors.append(f"{p} is not prime")
+    
+    if p < 3:
+        errors.append("p must be >= 3")
+    
+    if g < 2:
+        errors.append("g must be >= 2")
+    
+    if g >= p:
+        errors.append("g must be < p")
+    
+    return errors
+
+
+def diffie_hellman_keygen(p, g, private_key=None):
+    """Generate private and public keys for DH"""
+    steps = []
+    
+    steps.append({
+        'step': 1,
+        'operation': 'Parameters',
+        'p': p,
+        'g': g,
+        'details': f'p={p}, g={g}'
+    })
+    
+    if private_key is None:
+        private_key = random.randint(2, p - 2)
+    
+    steps.append({
+        'step': 2,
+        'operation': 'Generate Private Key',
+        'private_key': private_key,
+        'range': f'2 ≤ a ≤ {p-2}',
+        'details': f'a = {private_key}'
+    })
+    
+    public_key = mod_exp_simple(g, private_key, p)
+    
+    steps.append({
+        'step': 3,
+        'operation': 'Calculate Public Key',
+        'formula': 'A = g^a mod p',
+        'calculation': f'A = {g}^{private_key} mod {p}',
+        'result': public_key,
+        'details': f'Public key = {public_key}'
+    })
+    
+    return private_key, public_key, steps
+
+
+def diffie_hellman_shared_secret(p, g, private_key, other_public_key, party_name='Party'):
+    """Calculate shared secret"""
+    steps = []
+    
+    steps.append({
+        'step': 1,
+        'operation': f'{party_name} Parameters',
+        'private_key': private_key,
+        'other_public_key': other_public_key,
+        'p': p,
+        'g': g,
+        'details': f'a={private_key}, g={g}, p={p}'
+    })
+    
+    steps.append({
+        'step': 2,
+        'operation': f'{party_name} Public Key',
+        'formula': 'A = g^a mod p' if party_name == 'Alice' else 'B = g^b mod p',
+        'my_public_key': mod_exp_simple(g, private_key, p),
+        'details': 'Already computed'
+    })
+    
+    shared_secret = mod_exp_simple(other_public_key, private_key, p)
+    
+    steps.append({
+        'step': 3,
+        'operation': f'Calculate {party_name} Shared Secret',
+        'formula': 'K = B^a mod p' if party_name == 'Alice' else 'K = A^b mod p',
+        'calculation': f'K = {other_public_key}^{private_key} mod {p}',
+        'result': shared_secret,
+        'details': f'Shared secret = {shared_secret}'
+    })
+    
+    steps.append({
+        'step': 4,
+        'operation': 'Verification',
+        'verify_formula': 'Both parties should get same K',
+        'final_secret': shared_secret,
+        'details': 'Both compute: K = (g^b)^a = (g^a)^b = g^(ab) mod p'
+    })
+    
+    return shared_secret, steps
+
+
+def diffie_hellman_full_exchange(p, g, private_a=None, private_b=None):
+    """Complete Diffie-Hellman key exchange with all steps"""
+    all_steps = []
+    
+    errors = validate_dh_parameters(p, g)
+    if errors:
+        return None, None, None, None, all_steps, errors
+    
+    all_steps.append({
+        'phase': 'Parameter Validation',
+        'p': p,
+        'g': g,
+        'is_p_prime': is_prime_dh(p),
+        'validations': [f"{p} is {'prime ✓' if is_prime_dh(p) else 'NOT prime ✗'}"]
+    })
+    
+    primitive_root = find_primitive_root(p)
+    all_steps.append({
+        'phase': 'Primitive Root Check',
+        'p': p,
+        'primitive_root': primitive_root if primitive_root else 'Not calculated',
+        'note': f'g={g} is {"valid" if primitive_root and g < p else "may not be generator"}'
+    })
+    
+    # Alice generates keys
+    a, A, alice_gen_steps = diffie_hellman_keygen(p, g, private_a)
+    
+    all_steps.append({
+        'phase': 'Alice Key Generation',
+        'private_key': a,
+        'public_key': A,
+        'steps': alice_gen_steps
+    })
+    
+    # Bob generates keys
+    b, B, bob_gen_steps = diffie_hellman_keygen(p, g, private_b)
+    
+    all_steps.append({
+        'phase': 'Bob Key Generation',
+        'private_key': b,
+        'public_key': B,
+        'steps': bob_gen_steps
+    })
+    
+    # Key Exchange
+    all_steps.append({
+        'phase': 'Key Exchange',
+        'alice_public_key': A,
+        'bob_public_key': B,
+        'exchange': 'Alice sends A to Bob, Bob sends B to Alice'
+    })
+    
+    # Alice calculates shared secret
+    K_alice, alice_secret_steps = diffie_hellman_shared_secret(p, g, a, B, 'Alice')
+    
+    all_steps.append({
+        'phase': 'Alice Shared Secret',
+        'secret': K_alice,
+        'steps': alice_secret_steps
+    })
+    
+    # Bob calculates shared secret
+    K_bob, bob_secret_steps = diffie_hellman_shared_secret(p, g, b, A, 'Bob')
+    
+    all_steps.append({
+        'phase': 'Bob Shared Secret',
+        'secret': K_bob,
+        'steps': bob_secret_steps
+    })
+    
+    # Verification
+    match = (K_alice == K_bob)
+    
+    all_steps.append({
+        'phase': 'Verification',
+        'alice_secret': K_alice,
+        'bob_secret': K_bob,
+        'match': match,
+        'result': 'SUCCESS ✓' if match else 'FAILED ✗',
+        'formula': 'K = g^(ab) mod p'
+    })
+    
+    return K_alice, K_bob, A, B, all_steps, None
+
+
+def diffie_hellman_demo():
+    """Generate a demo DH exchange with small primes"""
+    steps = []
+    
+    p_demo = 23
+    g_demo = 5
+    
+    a_demo = random.randint(2, p_demo - 2)
+    b_demo = random.randint(2, p_demo - 2)
+    
+    A_demo = pow(g_demo, a_demo, p_demo)
+    B_demo = pow(g_demo, b_demo, p_demo)
+    
+    K_alice = pow(B_demo, a_demo, p_demo)
+    K_bob = pow(A_demo, b_demo, p_demo)
+    
+    steps.append({
+        'phase': 'Demo Parameters',
+        'p': p_demo,
+        'g': g_demo,
+        'a': a_demo,
+        'b': b_demo,
+        'A': A_demo,
+        'B': B_demo,
+        'K_alice': K_alice,
+        'K_bob': K_bob,
+        'match': K_alice == K_bob
+    })
+    
+    return steps
+
+
+# ============================================================
 #                    AES CONSTANTS & FUNCTIONS
 # ============================================================
 AES_SBOX = [
@@ -1660,9 +1927,8 @@ def compute_md5_hash(message):
 def des_cmac_generate_subkeys(key):
     """Generate K1 and K2 subkeys for DES-CMAC (64-bit)"""
     steps = []
-    Rb = 0x1B  # Polynomial for 64-bit blocks
+    Rb = 0x1B
     
-    # Encrypt zero block with key
     zero_block = bytes([0] * 8)
     zero_bits = bytes_to_bits_des(zero_block)
     key_bits = bytes_to_bits_des(key)
@@ -1679,9 +1945,8 @@ def des_cmac_generate_subkeys(key):
         'details': 'L = DES(K, 0^64)'
     })
     
-    # Generate K1
     K1_int = (L_int << 1) & ((1 << 64) - 1)
-    if L_int & (1 << 63):  # MSB is 1
+    if L_int & (1 << 63):
         K1_int ^= Rb
         xor_applied = True
     else:
@@ -1698,9 +1963,8 @@ def des_cmac_generate_subkeys(key):
         'msb_check': f'MSB(L) = {1 if xor_applied else 0}'
     })
     
-    # Generate K2
     K2_int = (K1_int << 1) & ((1 << 64) - 1)
-    if K1_int & (1 << 63):  # MSB is 1
+    if K1_int & (1 << 63):
         K2_int ^= Rb
         xor_applied2 = True
     else:
@@ -1734,7 +1998,6 @@ def md5_to_64bit_key(message):
     """
     steps = []
     
-    # Compute MD5 hash (128-bit)
     md5_result, md5_steps = compute_md5_hash(message)
     
     steps.append({
@@ -1745,7 +2008,6 @@ def md5_to_64bit_key(message):
         'md5_bytes': 16
     })
     
-    # Extract first 64 bits (8 bytes / 16 hex chars)
     des_key_hex = md5_result[:16]
     des_key = bytes.fromhex(des_key_hex)
     
@@ -1772,7 +2034,6 @@ def cmac_message_only(message, output_bits=64):
     """
     all_steps = []
     
-    # Step 1 & 2: Message → MD5 → 64-bit key
     des_key, md5_hash, key_steps, md5_detail_steps = md5_to_64bit_key(message)
     
     all_steps.append({
@@ -1783,7 +2044,6 @@ def cmac_message_only(message, output_bits=64):
         'derived_key_bits': 64
     })
     
-    # Step 3: Generate CMAC subkeys (K1, K2)
     K1, K2, subkey_steps = des_cmac_generate_subkeys(des_key)
     
     all_steps.append({
@@ -1793,18 +2053,15 @@ def cmac_message_only(message, output_bits=64):
         'steps': subkey_steps
     })
     
-    # Step 4: Prepare message (padding if needed)
     if isinstance(message, str):
         message = message.encode()
     
-    block_size = 8  # DES block size
+    block_size = 8
     msg_len = len(message)
     
     padding_info = []
     
-    # Check if padding needed
     if msg_len == 0 or msg_len % block_size != 0:
-        # Need padding
         pad_len = block_size - (msg_len % block_size)
         padding = b'\x80' + b'\x00' * (pad_len - 1)
         padded_message = message + padding
@@ -1823,7 +2080,6 @@ def cmac_message_only(message, output_bits=64):
             'reason': 'Message not multiple of block size'
         })
     else:
-        # No padding needed
         padded_message = message
         last_key = K1
         
@@ -1845,7 +2101,6 @@ def cmac_message_only(message, output_bits=64):
         'padding_info': padding_info
     })
     
-    # Step 5: Split into blocks
     blocks = [padded_message[i:i+block_size] for i in range(0, len(padded_message), block_size)]
     num_blocks = len(blocks)
     
@@ -1855,7 +2110,6 @@ def cmac_message_only(message, output_bits=64):
         'blocks': [{'block_num': i+1, 'hex': blocks[i].hex()} for i in range(num_blocks)]
     })
     
-    # Step 6: Process blocks with DES
     mac = bytes([0] * 8)
     mac_int = 0
     block_steps = []
@@ -1871,12 +2125,10 @@ def cmac_message_only(message, output_bits=64):
             'block_hex': block.hex()
         }
         
-        # XOR with previous MAC
         xor_result = mac_int ^ block_int
         step_info['previous_mac_hex'] = f'{mac_int:016x}'
         step_info['after_xor_hex'] = f'{xor_result:016x}'
         
-        # If last block, XOR with subkey
         if is_last:
             subkey_int = int.from_bytes(last_key, 'big')
             xor_result ^= subkey_int
@@ -1888,7 +2140,6 @@ def cmac_message_only(message, output_bits=64):
             step_info['subkey_name'] = 'N/A'
             step_info['after_subkey_xor_hex'] = 'N/A'
         
-        # DES encrypt
         input_bytes = xor_result.to_bytes(8, 'big')
         input_bits = bytes_to_bits_des(input_bytes)
         
@@ -1911,7 +2162,6 @@ def cmac_message_only(message, output_bits=64):
         'steps': block_steps
     })
     
-    # Step 7: Output (truncate if needed)
     full_mac = mac
     full_mac_bits = len(mac) * 8
     
@@ -1919,7 +2169,6 @@ def cmac_message_only(message, output_bits=64):
         truncate_bytes = (output_bits + 7) // 8
         mac = mac[:truncate_bytes]
         
-        # If not byte-aligned, mask extra bits
         if output_bits % 8 != 0:
             remaining_bits = output_bits % 8
             mask = (0xFF << (8 - remaining_bits)) & 0xFF
@@ -1961,7 +2210,7 @@ def cmac_verify_message_only(message, received_mac, output_bits=64):
 
 
 # ============================================================
-#                    ROUTES
+#                    ALL ROUTES
 # ============================================================
 @app.route("/")
 def home():
@@ -2280,6 +2529,97 @@ def rsa():
                           dec_result=dec_result, dec_steps=dec_steps, dec_error=dec_error)
 
 
+@app.route("/diffie-hellman", methods=["GET", "POST"])
+def diffie_hellman():
+    result = None
+    steps = None
+    error = None
+    operation = None
+    
+    p_val = None
+    g_val = None
+    private_a_val = None
+    private_b_val = None
+    alice_public = None
+    bob_public = None
+    
+    if request.method == "POST":
+        operation = request.form.get("operation", "exchange")
+        
+        try:
+            if operation == "demo":
+                demo_steps = diffie_hellman_demo()
+                steps = demo_steps
+                
+            elif operation == "exchange":
+                p_input = request.form.get("p", "").strip()
+                g_input = request.form.get("g", "").strip()
+                private_a_input = request.form.get("private_a", "").strip()
+                private_b_input = request.form.get("private_b", "").strip()
+                
+                if not p_input or not g_input:
+                    error = "Please provide both p and g"
+                else:
+                    p_val = int(p_input)
+                    g_val = int(g_input)
+                    
+                    if private_a_input:
+                        private_a_val = int(private_a_input)
+                    if private_b_input:
+                        private_b_val = int(private_b_input)
+                    
+                    errors = validate_dh_parameters(p_val, g_val)
+                    if errors:
+                        error = ", ".join(errors)
+                    else:
+                        shared, bob_secret, A, B, all_steps, err = diffie_hellman_full_exchange(
+                            p_val, g_val, private_a_val, private_b_val
+                        )
+                        
+                        if err:
+                            error = ", ".join(err)
+                        else:
+                            steps = all_steps
+                            alice_public = A
+                            bob_public = B
+                            
+            elif operation == "validate":
+                p_input = request.form.get("p", "").strip()
+                g_input = request.form.get("g", "").strip()
+                
+                if not p_input or not g_input:
+                    error = "Please provide both p and g"
+                else:
+                    p_val = int(p_input)
+                    g_val = int(g_input)
+                    
+                    errors = validate_dh_parameters(p_val, g_val)
+                    if errors:
+                        error = ", ".join(errors)
+                    else:
+                        primitive = find_primitive_root(p_val)
+                        steps = [{
+                            'phase': 'Validation Result',
+                            'p': p_val,
+                            'g': g_val,
+                            'is_prime': is_prime_dh(p_val),
+                            'primitive_root': primitive if primitive else 'N/A',
+                            'valid': True
+                        }]
+                        
+        except ValueError:
+            error = "Please enter valid integers for all fields"
+        except Exception as e:
+            error = f"Error: {str(e)}"
+    
+    return render_template("index.html", page="diffie-hellman",
+                          result=result, steps=steps, error=error,
+                          operation=operation,
+                          p_val=p_val, g_val=g_val,
+                          private_a_val=private_a_val, private_b_val=private_b_val,
+                          alice_public=alice_public, bob_public=bob_public)
+
+
 @app.route("/aes", methods=["GET", "POST"])
 def aes():
     result, steps, error, mode, op_mode = None, None, None, None, None
@@ -2345,6 +2685,7 @@ def des_route():
     
     return render_template("index.html", page="des", result=result, steps=steps, error=error, mode=mode, op_mode=op_mode, des_iv=DES_IV.hex())
 
+
 @app.route("/cmac", methods=["GET", "POST"])
 def cmac():
     result, steps, error, mode = None, None, None, None
@@ -2370,12 +2711,11 @@ def cmac():
         else:
             try:
                 if mode == "generate":
-                    # Generate CMAC
                     mac, steps, des_key, md5_hash_value = cmac_message_only(message, output_bits)
                     result = mac.hex()
                     des_key_value = des_key.hex()
                     
-                else:  # verify mode
+                else:
                     received_mac_str = request.form.get("mac", "")
                     if not received_mac_str:
                         error = "Please provide MAC to verify"
@@ -2399,6 +2739,7 @@ def cmac():
                           error=error, mode=mode, verification_result=verification_result,
                           md5_hash=md5_hash_value, des_key=des_key_value)
 
+
 @app.route("/md5", methods=["GET", "POST"])
 def md5_route():
     result, steps, error = None, None, None
@@ -2418,4 +2759,5 @@ def md5_route():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=True)

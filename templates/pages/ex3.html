@@ -1,76 +1,18 @@
-<div class="section-header">
-    <h1>📙 Exercise 3: RSA Algorithm</h1>
-    <p>Public Key Cryptography</p>
+]<div class="section-header">
+    <h1>📙 Exercise 3: Asymmetric Cryptography</h1>
+    <p>Public Key Algorithms & Key Exchange Protocols</p>
 </div>
 
 <div class="home-container">
     <a href="/rsa" class="home-card">
-        <h2>🔐 RSA Encryption</h2>
-        <p>Complete RSA implementation with key generation, encryption, and decryption with detailed steps.</p>
-        <span>Open →</span>
+        <h2>🔐 RSA Algorithm</h2>
+        <p>Public-key cryptosystem for encryption, decryption, and digital signatures.</p>
+        <span>Explore →</span>
     </a>
-</div>
-
-<div class="info-box" style="margin-top: 40px;">
-    <h4>📚 About RSA</h4>
-    <p><strong>RSA</strong> (Rivest-Shamir-Adleman) is one of the first public-key cryptosystems and is widely used for secure data transmission.</p>
-    <p style="margin-top: 15px;"><strong>Key Concepts:</strong></p>
-    <p>• <strong>Asymmetric Encryption:</strong> Uses a pair of keys (public & private)</p>
-    <p>• <strong>Public Key:</strong> (e, n) - Used for encryption, can be shared</p>
-    <p>• <strong>Private Key:</strong> (d, n) - Used for decryption, must be kept secret</p>
-    <p>• <strong>Security:</strong> Based on the difficulty of factoring large prime numbers</p>
-</div>
-
-<div class="formula-box" style="margin-top: 30px;">
-    <h4 style="color: #38bdf8; margin-bottom: 15px;">📐 RSA Algorithm Steps</h4>
     
-    <div class="rsa-steps-visual">
-        <div class="rsa-step">
-            <div class="step-number">1</div>
-            <div class="step-content">
-                <h5>Select Primes</h5>
-                <p>Choose two large prime numbers p and q</p>
-            </div>
-        </div>
-        
-        <div class="rsa-step">
-            <div class="step-number">2</div>
-            <div class="step-content">
-                <h5>Calculate n</h5>
-                <p>n = p × q (modulus)</p>
-            </div>
-        </div>
-        
-        <div class="rsa-step">
-            <div class="step-number">3</div>
-            <div class="step-content">
-                <h5>Calculate φ(n)</h5>
-                <p>φ(n) = (p-1) × (q-1)</p>
-            </div>
-        </div>
-        
-        <div class="rsa-step">
-            <div class="step-number">4</div>
-            <div class="step-content">
-                <h5>Choose e</h5>
-                <p>1 < e < φ(n), gcd(e, φ(n)) = 1</p>
-            </div>
-        </div>
-        
-        <div class="rsa-step">
-            <div class="step-number">5</div>
-            <div class="step-content">
-                <h5>Calculate d</h5>
-                <p>d = e⁻¹ mod φ(n)</p>
-            </div>
-        </div>
-        
-        <div class="rsa-step">
-            <div class="step-number">6</div>
-            <div class="step-content">
-                <h5>Keys Ready!</h5>
-                <p>Public: (e, n), Private: (d, n)</p>
-            </div>
-        </div>
-    </div>
+    <a href="/diffie-hellman" class="home-card">
+        <h2>🔑 Diffie-Hellman</h2>
+        <p>Key exchange protocol for establishing shared secrets over insecure channels.</p>
+        <span>Explore →</span>
+    </a>
 </div>

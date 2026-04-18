@@ -1,0 +1,400 @@
+<div class="section-header">
+    <h1>🔐 Diffie-Hellman Key Exchange</h1>
+    <p>Secure Key Generation & Exchange Protocol</p>
+</div>
+
+<a href="/ex3" class="back-btn">← Back to Ex3</a>
+
+<!-- Flow Diagram -->
+<div class="info-box" style="max-width: 1000px;">
+    <h3>🔄 DH Key Exchange Flow</h3>
+    <div class="formula-grid">
+        <div class="formula-item">
+            <h5>Step 1</h5>
+            <code>Agree on p, g</code>
+            <p>Public parameters</p>
+        </div>
+        <div class="formula-item">
+            <h5>Step 2</h5>
+            <code>A Keys</code>
+            <p>a, A=g^a mod p</p>
+        </div>
+        <div class="formula-item">
+            <h5>Step 3</h5>
+            <code>B Keys</code>
+            <p>b, B=g^b mod p</p>
+        </div>
+        <div class="formula-item">
+            <h5>Step 4</h5>
+            <code>Exchange</code>
+            <p>A → B: A</p>
+        </div>
+        <div class="formula-item">
+            <h5>Step 5</h5>
+            <code>Exchange</code>
+            <p>B → A: B</p>
+        </div>
+        <div class="formula-item">
+            <h5>Step 6</h5>
+            <code>Shared Secret</code>
+            <p>K = B^a = A^b</p>
+        </div>
+    </div>
+</div>
+
+<!-- Input Form -->
+<div class="cipher-container">
+    <div class="card">
+        <h2>DH Key Exchange</h2>
+        <form method="post">
+            <label style="color:#64748b; font-size:0.9rem;">Select Mode:</label>
+            <select name="operation" id="operation-select">
+                <option value="exchange" {% if operation == 'exchange' %}selected{% endif %}>Full Exchange</option>
+                <option value="demo" {% if operation == 'demo' %}selected{% endif %}>Demo (p=23, g=5)</option>
+                <option value="validate" {% if operation == 'validate' %}selected{% endif %}>Validate Parameters</option>
+            </select>
+            
+            <div id="exchange-options">
+                <label style="color:#64748b; font-size:0.9rem; margin-top:10px;">Prime p:</label>
+                <input name="p" placeholder="e.g., 23, 97, 113" value="{{ p_val if p_val else '' }}">
+                
+                <label style="color:#64748b; font-size:0.9rem; margin-top:10px;">Generator g:</label>
+                <input name="g" placeholder="e.g., 5, 2, 3" value="{{ g_val if g_val else '' }}">
+                
+                <label style="color:#64748b; font-size:0.9rem; margin-top:10px;">A Private Key a (optional):</label>
+                <input name="private_a" placeholder="Leave empty for random" value="{{ private_a_val if private_a_val else '' }}">
+                
+                <label style="color:#64748b; font-size:0.9rem; margin-top:10px;">B Private Key b (optional):</label>
+                <input name="private_b" placeholder="Leave empty for random" value="{{ private_b_val if private_b_val else '' }}">
+            </div>
+            
+            <button type="submit">Execute</button>
+        </form>
+    </div>
+</div>
+
+<!-- Error Display -->
+{% if error %}
+<div class="error-box">
+    <h3>⚠️ Error</h3>
+    <p>{{ error }}</p>
+</div>
+{% endif %}
+
+<!-- Results Display -->
+{% if steps %}
+{% for step_group in steps %}
+
+    {% if step_group.phase == 'Demo Parameters' %}
+    <div class="block-section">
+        <h4>🎯 Demo: Diffie-Hellman with Small Numbers</h4>
+        <table class="crypto-table">
+            <tr>
+                <th>Parameter</th>
+                <th>Value</th>
+                <th>Description</th>
+            </tr>
+            <tr>
+                <td>Prime (p)</td>
+                <td><code>{{ step_group.p }}</code></td>
+                <td>Public prime modulus</td>
+            </tr>
+            <tr>
+                <td>Generator (g)</td>
+                <td><code>{{ step_group.g }}</code></td>
+                <td>Public generator</td>
+            </tr>
+            <tr>
+                <td>A Private (a)</td>
+                <td><code>{{ step_group.a }}</code></td>
+                <td>Random secret</td>
+            </tr>
+            <tr>
+                <td>B Private (b)</td>
+                <td><code>{{ step_group.b }}</code></td>
+                <td>Random secret</td>
+            </tr>
+            <tr>
+                <td>A Public (A)</td>
+                <td><code>{{ step_group.A }}</code></td>
+                <td>g^a mod p = {{ step_group.g }}^{{ step_group.a }} mod {{ step_group.p }}</td>
+            </tr>
+            <tr>
+                <td>B Public (B)</td>
+                <td><code>{{ step_group.B }}</code></td>
+                <td>g^b mod p = {{ step_group.g }}^{{ step_group.b }} mod {{ step_group.p }}</td>
+            </tr>
+            <tr class="highlight-row">
+                <td><strong>Shared Secret (K)</strong></td>
+                <td><code style="font-size:1.2rem;">{{ step_group.K_A }}</code></td>
+                <td>g^(ab) mod p</td>
+            </tr>
+        </table>
+        
+        <div class="info-box" style="margin-top:20px;">
+            <h4>📊 Verification</h4>
+            <p><strong>A computes:</strong> K = B<sup>a</sup> mod p = {{ step_group.B }}<sup>{{ step_group.a }}</sup> mod {{ step_group.p }} = <code>{{ step_group.K_A }}</code></p>
+            <p><strong>B computes:</strong> K = A<sup>b</sup> mod p = {{ step_group.A }}<sup>{{ step_group.b }}</sup> mod {{ step_group.p }} = <code>{{ step_group.K_B }}</code></p>
+            <p><strong>Match:</strong> <span style="color:{{ '#16a34a' if step_group.match else '#dc2626' }}; font-weight:bold; font-size:1.1rem;">{{ '✓ Both equal!' if step_group.match else '✗ Mismatch!' }}</span></p>
+        </div>
+    </div>
+    
+    {% elif step_group.phase == 'Parameter Validation' %}
+    <div class="block-section">
+        <h4>🔍 Step 1: Parameter Validation</h4>
+        <table class="crypto-table">
+            <tr>
+                <th>Parameter</th>
+                <th>Value</th>
+                <th>Check</th>
+            </tr>
+            <tr>
+                <td>Prime p</td>
+                <td><code>{{ step_group.p }}</code></td>
+                <td><span style="color:{{ '#16a34a' if step_group.is_p_prime else '#dc2626' }};">{{ 'Prime ✓' if step_group.is_p_prime else 'NOT Prime ✗' }}</span></td>
+            </tr>
+            <tr>
+                <td>Generator g</td>
+                <td><code>{{ step_group.g }}</code></td>
+                <td><span style="color:{{ '#16a34a' if step_group.g < step_group.p else '#dc2626' }};">{{ 'Valid ✓' if step_group.g < step_group.p else 'Invalid ✗' }}</span></td>
+            </tr>
+        </table>
+        {% for v in step_group.validations %}
+        <p>{{ v }}</p>
+        {% endfor %}
+    </div>
+    
+    {% elif step_group.phase == 'Primitive Root Check' %}
+    <div class="block-section">
+        <h4>🌐 Step 2: Generator Check</h4>
+        <p><strong>Prime p:</strong> {{ step_group.p }}</p>
+        <p><strong>Generator g:</strong> {{ step_group.g }}</p>
+        <p><strong>Primitive Root:</strong> <code>{{ step_group.primitive_root if step_group.primitive_root else 'N/A' }}</code></p>
+        <p><strong>Note:</strong> {{ step_group.note }}</p>
+    </div>
+    
+    {% elif step_group.phase == 'A Key Generation' %}
+    <div class="block-section">
+        <h4>👤 A Key Generation</h4>
+        <div style="background: rgba(14, 165, 233, 0.1); padding: 15px; border-radius: 8px; margin: 15px 0;">
+            <p><strong>Private Key (a):</strong> <code style="font-size:1.1rem;">{{ step_group.private_key }}</code></p>
+            <p><strong>Public Key (A):</strong> <code style="font-size:1.1rem;">{{ step_group.public_key }}</code></p>
+        </div>
+        
+        <table class="crypto-table" style="margin-top:15px;">
+            <tr>
+                <th>Step</th>
+                <th>Operation</th>
+                <th>Details</th>
+            </tr>
+            {% for s in step_group.steps %}
+            <tr>
+                <td>{{ s.step }}</td>
+                <td>{{ s.operation }}</td>
+                <td>{{ s.details }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+    
+    {% elif step_group.phase == 'B Key Generation' %}
+    <div class="block-section">
+        <h4>👤 B Key Generation</h4>
+        <div style="background: rgba(14, 165, 233, 0.1); padding: 15px; border-radius: 8px; margin: 15px 0;">
+            <p><strong>Private Key (b):</strong> <code style="font-size:1.1rem;">{{ step_group.private_key }}</code></p>
+            <p><strong>Public Key (B):</strong> <code style="font-size:1.1rem;">{{ step_group.public_key }}</code></p>
+        </div>
+        
+        <table class="crypto-table" style="margin-top:15px;">
+            <tr>
+                <th>Step</th>
+                <th>Operation</th>
+                <th>Details</th>
+            </tr>
+            {% for s in step_group.steps %}
+            <tr>
+                <td>{{ s.step }}</td>
+                <td>{{ s.operation }}</td>
+                <td>{{ s.details }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+    
+    {% elif step_group.phase == 'Key Exchange' %}
+    <div class="block-section">
+        <h4>🔄 Public Key Exchange</h4>
+        
+        <div class="formula-box" style="margin-top:20px;">
+            <div class="formula-grid">
+                <div class="formula-item">
+                    <h5>👤 A Sends</h5>
+                    <code style="font-size:1.2rem;">{{ step_group.A_public_key }}</code>
+                    <p>Public Key A</p>
+                </div>
+                <div class="formula-item">
+                    <h5>👤 B Sends</h5>
+                    <code style="font-size:1.2rem;">{{ step_group.B_public_key }}</code>
+                    <p>Public Key B</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="info-box" style="margin-top:15px;">
+            <p><strong>Exchange Process:</strong> {{ step_group.exchange }}</p>
+            <p>These public keys can be transmitted over an insecure channel!</p>
+        </div>
+    </div>
+    
+    {% elif step_group.phase == 'A Shared Secret' %}
+    <div class="block-section">
+        <h4>🔑 A Computes Shared Secret</h4>
+        <div style="background: rgba(34, 197, 94, 0.1); padding: 15px; border-radius: 8px; margin: 15px 0;">
+            <p><strong>Shared Secret (K):</strong> <code style="font-size:1.3rem; color:#16a34a;">{{ step_group.secret }}</code></p>
+        </div>
+        
+        {% for s in step_group.steps %}
+            {% if s.operation == 'Calculate A Shared Secret' %}
+            <div class="info-box">
+                <p><strong>Formula:</strong> {{ s.formula }}</p>
+                <p><strong>Calculation:</strong> {{ s.calculation }}</p>
+                <p><strong>Result:</strong> <code style="font-size:1.1rem;">{{ s.result }}</code></p>
+            </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+    
+    {% elif step_group.phase == 'B Shared Secret' %}
+    <div class="block-section">
+        <h4>🔑 B Computes Shared Secret</h4>
+        <div style="background: rgba(34, 197, 94, 0.1); padding: 15px; border-radius: 8px; margin: 15px 0;">
+            <p><strong>Shared Secret (K):</strong> <code style="font-size:1.3rem; color:#16a34a;">{{ step_group.secret }}</code></p>
+        </div>
+        
+        {% for s in step_group.steps %}
+            {% if s.operation == 'Calculate B Shared Secret' %}
+            <div class="info-box">
+                <p><strong>Formula:</strong> {{ s.formula }}</p>
+                <p><strong>Calculation:</strong> {{ s.calculation }}</p>
+                <p><strong>Result:</strong> <code style="font-size:1.1rem;">{{ s.result }}</code></p>
+            </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+    
+    {% elif step_group.phase == 'Verification' %}
+    <div class="block-section">
+        <h4>✅ Verification & Final Result</h4>
+        <table class="crypto-table">
+            <tr>
+                <th>Party</th>
+                <th>Shared Secret</th>
+            </tr>
+            <tr>
+                <td>👤 A</td>
+                <td><code>{{ step_group.A_secret }}</code></td>
+            </tr>
+            <tr>
+                <td>👤 B</td>
+                <td><code>{{ step_group.B_secret }}</code></td>
+            </tr>
+            <tr class="{{ 'highlight-row' if step_group.match else '' }}" style="background: {{ 'rgba(34, 197, 94, 0.15)' if step_group.match else 'rgba(239, 68, 68, 0.15)' }};">
+                <td><strong>Result</strong></td>
+                <td style="color: {{ '#16a34a' if step_group.match else '#dc2626' }}; font-weight:bold; font-size:1.3rem;">
+                    {{ step_group.result }}
+                </td>
+            </tr>
+        </table>
+        
+        <div class="formula-box" style="margin-top:20px;">
+            <h5 style="color:#0284c7; text-align:center;">Mathematical Formula</h5>
+            <code style="display:block; text-align:center; font-size:1.2rem; margin-top:10px;">
+                K = g<sup>ab</sup> mod p = (g<sup>a</sup>)<sup>b</sup> mod p = (g<sup>b</sup>)<sup>a</sup> mod p
+            </code>
+            <p style="text-align:center; margin-top:10px; color:#64748b;">Both A and B arrive at the same shared secret!</p>
+        </div>
+    </div>
+    
+    {% elif step_group.phase == 'Validation Result' %}
+    <div class="block-section">
+        <h4>✅ Parameter Validation Result</h4>
+        <table class="crypto-table">
+            <tr>
+                <th>Parameter</th>
+                <th>Value</th>
+            </tr>
+            <tr>
+                <td>p (Prime)</td>
+                <td><code>{{ step_group.p }}</code></td>
+            </tr>
+            <tr>
+                <td>g (Generator)</td>
+                <td><code>{{ step_group.g }}</code></td>
+            </tr>
+            <tr>
+                <td>Is p prime?</td>
+                <td><span style="color:{{ '#16a34a' if step_group.is_prime else '#dc2626' }}; font-weight:bold;">{{ 'Yes ✓' if step_group.is_prime else 'No ✗' }}</span></td>
+            </tr>
+            <tr>
+                <td>Primitive Root of p</td>
+                <td><code>{{ step_group.primitive_root if step_group.primitive_root else 'N/A' }}</code></td>
+            </tr>
+            <tr class="{{ 'highlight-row' if step_group.valid else '' }}">
+                <td><strong>Parameters Valid?</strong></td>
+                <td><span style="color:{{ '#16a34a' if step_group.valid else '#dc2626' }}; font-weight:bold; font-size:1.1rem;">{{ 'Yes ✓' if step_group.valid else 'No ✗' }}</span></td>
+            </tr>
+        </table>
+    </div>
+    {% endif %}
+
+{% endfor %}
+{% endif %}
+
+<!-- Info Box -->
+<div class="info-box">
+    <h3>ℹ️ About Diffie-Hellman Key Exchange</h3>
+    <p><strong>Diffie-Hellman</strong> is a cryptographic protocol that allows two parties to establish a shared secret over an insecure communication channel.</p>
+    
+    <p style="margin-top:15px;"><strong>Complete Process:</strong></p>
+    <p>1️⃣ <strong>Public Parameters:</strong> Both parties agree on prime <code>p</code> and generator <code>g</code> (these are public)</p>
+    <p>2️⃣ <strong>A's Keys:</strong> Chooses secret <code>a</code>, computes <code>A = g<sup>a</sup> mod p</code></p>
+    <p>3️⃣ <strong>B's Keys:</strong> Chooses secret <code>b</code>, computes <code>B = g<sup>b</sup> mod p</code></p>
+    <p>4️⃣ <strong>Public Exchange:</strong> A and B exchange <code>A</code> and <code>B</code></p>
+    <p>5️⃣ <strong>A's Secret:</strong> Computes <code>K = B<sup>a</sup> mod p</code></p>
+    <p>6️⃣ <strong>B's Secret:</strong> Computes <code>K = A<sup>b</sup> mod p</code></p>
+    <p>7️⃣ <strong>Result:</strong> Both parties now share the same secret <code>K = g<sup>ab</sup> mod p</code></p>
+    
+    <p style="margin-top:15px;"><strong>Security:</strong></p>
+    <p>• An attacker can see <code>p</code>, <code>g</code>, <code>A</code>, and <code>B</code></p>
+    <p>• However, they cannot compute <code>K</code> without solving the discrete logarithm problem</p>
+    <p>• The security relies on the difficulty of computing <code>a</code> from <code>g<sup>a</sup> mod p</code></p>
+    
+    <p style="margin-top:15px;"><strong>Applications:</strong></p>
+    <p>• TLS/SSL (HTTPS connections)</p>
+    <p>• VPN protocols (IPsec, IKE)</p>
+    <p>• SSH key exchange</p>
+    <p>• Signal Protocol (end-to-end encryption)</p>
+    
+    <p style="margin-top:15px;"><strong>Note:</strong> For real-world security, <code>p</code> should be a very large prime (2048+ bits). Small primes like 23 are only for educational purposes!</p>
+</div>
+
+<script>
+// Show/hide exchange options based on operation
+document.getElementById('operation-select').addEventListener('change', function() {
+    const exchangeOptions = document.getElementById('exchange-options');
+    if (this.value === 'demo') {
+        exchangeOptions.style.display = 'none';
+    } else {
+        exchangeOptions.style.display = 'block';
+    }
+});
+
+// Initialize on page load
+window.addEventListener('DOMContentLoaded', function() {
+    const operationSelect = document.getElementById('operation-select');
+    if (operationSelect.value === 'demo') {
+        document.getElementById('exchange-options').style.display = 'none';
+    }
+});
+</script>
+
